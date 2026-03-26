@@ -1,0 +1,295 @@
+/* User Access Request Form - modern card layout */
+.user-request-form .form-main-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.uar-shell {
+    overflow: hidden;
+}
+
+.uar-header {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.uar-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1d4ed8;
+    border: 1px solid rgba(29, 78, 216, 0.18);
+    background: rgba(29, 78, 216, 0.06);
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+}
+
+.uar-progress {
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.uar-progress-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #ffffff;
+}
+
+.uar-progress-item.is-active {
+    border-color: rgba(13, 110, 253, 0.35);
+    color: #0d6efd;
+    background: rgba(13, 110, 253, 0.06);
+}
+
+.uar-progress-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: #d1d5db;
+}
+
+.uar-progress-item.is-active .uar-progress-dot {
+    background: #0d6efd;
+}
+
+.user-request-form .form-section {
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.user-request-form .form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.user-request-form .section-label {
+    font-weight: 600;
+    color: #111827;
+}
+
+.user-request-form .form-label {
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.user-request-form .config-block {
+    padding: 1rem;
+    background-color: #f9fafb;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.user-request-form .config-block.is-disabled {
+    opacity: 0.55;
+}
+
+.user-request-form .config-block.is-disabled,
+.user-request-form .config-block.is-disabled * {
+    cursor: not-allowed !important;
+}
+
+.user-request-form .config-block-title {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.user-request-form .access-request-grid .form-check-label {
+    font-size: 0.85rem;
+}
+
+.uar-section-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.uar-section-subtext {
+    color: #6b7280;
+}
+
+.uar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.uar-nav-link {
+    text-decoration: none;
+    font-size: 0.85rem;
+    color: #374151;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.5rem;
+}
+
+.uar-nav-link:hover {
+    background: rgba(13, 110, 253, 0.07);
+    color: #0d6efd;
+}
+
+.uar-check-tile {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.65rem;
+    padding: 0.55rem 0.6rem;
+    background: #ffffff;
+    transition: box-shadow 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+
+.uar-check-tile:hover {
+    border-color: rgba(13, 110, 253, 0.35);
+    box-shadow: 0 10px 26px rgba(2, 6, 23, 0.06);
+    transform: translateY(-1px);
+}
+
+.uar-check-tile .form-check-input:checked + .form-check-label {
+    font-weight: 600;
+    color: #0d6efd;
+}
+
+.user-request-form .form-actions {
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.card {
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+}
+
+.card-body {
+    border-radius: 0.75rem;
+}
+
+.btn-primary {
+    padding: 0.5rem 1.5rem;
+}
+
+/* Layout with sidebar (desktop) */
+.form-layout {
+    align-items: flex-start;
+}
+
+.form-sidebar {
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    padding: 1rem;
+    background-color: #f9fafb;
+}
+
+.form-sidebar .sidebar-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.form-sidebar .sidebar-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0 0 0.75rem;
+    font-size: 0.85rem;
+    color: #4b5563;
+}
+
+.form-sidebar .sidebar-list li + li {
+    margin-top: 0.3rem;
+}
+
+.form-sidebar .sidebar-note {
+    color: #6b7280;
+}
+
+.uar-sidebar-note {
+    color: #6b7280;
+}
+
+.form-steps {
+    gap: 0.75rem;
+}
+
+.form-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.form-step-number {
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 999px;
+    background-color: #e5e7eb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.form-step.active .form-step-number {
+    background-color: #0d6efd;
+    color: #ffffff;
+}
+
+.form-step-label {
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .user-request-form .config-block {
+        padding: 0.75rem;
+    }
+
+    .uar-check-tile {
+        padding: 0.5rem 0.55rem;
+    }
+}
+
+/* Smooth conditional UI transitions (avoid jarring "instant" show/hide) */
+.system-block,
+.access-end-date-wrap {
+    overflow: hidden;
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 2000px;
+    transition: opacity 180ms ease, transform 180ms ease, max-height 240ms ease;
+}
+
+.system-block.uar-is-hidden,
+.access-end-date-wrap.uar-is-hidden {
+    opacity: 0;
+    transform: translateY(6px);
+    max-height: 0;
+    pointer-events: none;
+}
+
+/* When a Bootstrap `mb-4` class is present, collapse spacing when hidden. */
+.system-block.uar-is-hidden {
+    margin-bottom: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .system-block,
+    .access-end-date-wrap {
+        transition: none !important;
+    }
+}
