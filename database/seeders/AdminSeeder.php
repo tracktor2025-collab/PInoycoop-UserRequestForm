@@ -36,6 +36,7 @@ class AdminSeeder extends Seeder
             'name' => $name,
             'email' => $email,
             'password' => $plainPassword,
+            'role' => (string) env('ADMIN_ROLE', 'super_admin'),
         ]);
 
         $this->command?->info('Initial admin account created. You can remove ADMIN_INITIAL_PASSWORD from .env after first login if you prefer.');

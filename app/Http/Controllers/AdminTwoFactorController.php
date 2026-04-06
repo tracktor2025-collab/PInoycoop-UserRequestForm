@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Admin;
+use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -11,6 +12,16 @@ use PragmaRX\Google2FA\Google2FA;
 
 class AdminTwoFactorController extends Controller
 {
+    private function dashboardRouteFor(Admin $admin, Request $request): string
+    {
+        $portal = (string) $request->session()->get('login_portal', '');
+        if ($portal === 'super' || $admin->isSuperAdmin()) {
+            return 'super.dashboard';
+        }
+
+        return 'admin.dashboard';
+    }
+
     public function setup(Request $request, Google2FA $google2fa): View|RedirectResponse
     {
         $admin = $this->pendingAdmin($request);
@@ -36,7 +47,7 @@ class AdminTwoFactorController extends Controller
 
         $issuer = (string) config('app.name', 'Admin');
         $otpauth = $google2fa->getQRCodeUrl($issuer, $admin->email, $secret);
-        $qrImageUrl = 'https://quickchart.io/qr?size=220x220&text=' . rawurlencode($otpauth);
+        $qrImageUrl = 'https://quickchart.io/qr?size=220x220&text='.rawurlencode($otpauth);
 
         return view('admin.two-factor-setup', [
             'admin' => $admin,
@@ -80,7 +91,8 @@ class AdminTwoFactorController extends Controller
 
         $this->completeTwoFactorLogin($request, $admin);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Two-factor authentication is enabled for your account.');
+        return redirect()->route($this->dashboardRouteFor($admin, $request))
+            ->with('success', 'Two-factor authentication is enabled for your account.');
     }
 
     public function challenge(Request $request): View|RedirectResponse
@@ -113,7 +125,7 @@ class AdminTwoFactorController extends Controller
 
         $this->completeTwoFactorLogin($request, $admin);
 
-        return redirect()->intended(route('admin.dashboard'));
+        return redirect()->intended(route($this->dashboardRouteFor($admin, $request)));
     }
 
     private function pendingAdmin(Request $request): Admin
@@ -131,5 +143,15 @@ class AdminTwoFactorController extends Controller
         $request->session()->forget(['pending_2fa_admin_id', 'admin_totp_enrollment_secret']);
         $request->session()->regenerate();
         $request->session()->put('admin_id', $admin->id);
+
+        $portal = (string) $request->session()->get('login_portal', '');
+        AuditLogger::log(
+            $request,
+            'auth.login',
+            sprintf('Admin logged in (%s portal).', $portal === 'super' ? 'super' : 'standard'),
+            null,
+            null,
+            ['portal' => $portal, 'admin_email' => $admin->email],
+        );
     }
 }

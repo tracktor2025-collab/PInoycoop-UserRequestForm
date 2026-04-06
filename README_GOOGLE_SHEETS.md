@@ -109,7 +109,8 @@ These are always included:
 - `Full Name`
 - `Request Date`
 - `Mobile No`
-- `Coop Name Branch`
+- `Coop Name`
+- `Branch`
 - `Postal Code`
 - `Gender`
 - `Address`

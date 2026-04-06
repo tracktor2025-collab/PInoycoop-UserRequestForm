@@ -88,11 +88,18 @@ return [
         'SMS Portal' => env('GOOGLE_SHEET_SMS', 'SMS Portal'),
         'MSP-ISS Portal' => env('GOOGLE_SHEET_MSP', 'MSP-ISS Portal'),
         'MSP-ISS FTP' => env('GOOGLE_SHEET_FTP', 'MSP-ISS FTP'),
+        'Helpdesk' => env('GOOGLE_SHEET_HELPDESK', 'Helpdesk'),
+        'PASS' => env('GOOGLE_SHEET_PASS', 'PASS'),
+        'CASH ONLINE' => env('GOOGLE_SHEET_CASH_ONLINE', 'CASH ONLINE'),
         'CORE 3.0' => env('GOOGLE_SHEET_CORE', 'CORE 3.0'),
+        'BIZMOTO PORTAL (Business Center)' => env('GOOGLE_SHEET_BIZMOTO', 'BIZMOTO PORTAL (Business Center)'),
+        'PINOYCOOP PORTAL' => env('GOOGLE_SHEET_PINOYCOOP', 'PINOYCOOP PORTAL'),
         'MVM Portal' => env('GOOGLE_SHEET_MVM', 'MVM Portal'),
+        'PCDISS' => env('GOOGLE_SHEET_PCDISS', 'PCDISS'),
+        'SSL VPN' => env('GOOGLE_SHEET_SSL_VPN', 'SSL VPN'),
     ],
 
-    // Used for systems that don't have a detailed block/tab mapping (Helpdesk, PASS, etc.)
+    // Used for systems that truly don't have a dedicated tab mapping
     'sheet_other' => env('GOOGLE_SHEET_OTHER', 'Other Systems'),
 
     /*

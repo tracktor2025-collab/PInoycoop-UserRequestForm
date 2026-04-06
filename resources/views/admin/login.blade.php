@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin Login</title>
+    <title>{{ $title ?? 'Admin Login' }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -21,14 +21,17 @@
 <body>
 <div class="card login-card shadow">
     <div class="card-body p-4">
-        <h1 class="h4 mb-1">Admin Dashboard Login</h1>
-        <p class="text-muted mb-4">Sign in with your admin email and password.</p>
+        <h1 class="h4 mb-1">{{ $title ?? 'Admin Dashboard Login' }}</h1>
+        <p class="text-muted mb-4">{{ $subtitle ?? 'Sign in with your admin email and password.' }}</p>
 
         @if(session('error'))
             <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
-        <form method="POST" action="{{ route('admin.login') }}">
+        <form method="POST" action="{{ $formAction ?? route('admin.login') }}">
             @csrf
             <div class="mb-3">
                 <label class="form-label" for="email">Email</label>
@@ -46,6 +49,16 @@
             </div>
             <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
+        @if(($portal ?? '') === 'admin')
+            <div class="text-center mt-2">
+                <a href="{{ route('admin.password.request') }}" class="text-decoration-none small">Forgot password?</a>
+            </div>
+        @endif
+        @if(! empty($switchUrl ?? null) && ! empty($switchLabel ?? null))
+            <div class="text-center mt-3">
+                <a href="{{ $switchUrl }}" class="text-decoration-none">{{ $switchLabel }}</a>
+            </div>
+        @endif
     </div>
 </div>
 </body>

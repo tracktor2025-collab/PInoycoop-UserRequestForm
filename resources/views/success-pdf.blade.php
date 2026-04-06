@@ -5,270 +5,408 @@
     <title>User Access Request Form</title>
     <style>
         * { box-sizing: border-box; }
-        /* Slightly larger page margin avoids border clipping in DomPDF/printers */
-        @page { size: A4 portrait; margin: 15mm; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 7pt; margin: 0; padding: 0; color: #000; }
-        .container { width: 100%; }
-        /*
-         * DomPDF can clip table borders when content is exactly flush to the page box.
-         * Keep the page a bit narrower than the available width to preserve inner grid lines.
-         */
-        .uarf-page { border: 1px solid #000; padding: 7px; background: #fff; page-break-inside: avoid; width: 170mm; margin: 0 auto; }
-        .uarf-header { text-align: center; margin-bottom: 3px; }
-        .uarf-title { font-size: 10pt; font-weight: bold; margin: 0 0 2px 0; }
-        .uarf-request-type-row { font-size: 7pt; margin-bottom: 2px; }
-        .uarf-request-type-row span { display: inline-block; margin-right: 8px; }
-        .uarf-note { font-size: 6pt; color: #333; margin-top: 2px; }
-        .uarf-check-label { display: inline-block; margin-right: 8px; margin-bottom: 2px; vertical-align: middle; white-space: nowrap; }
-        /* Checkbox box + check size */
-        .uarf-cb {
-            border: 1px solid #000;
-            width: 11px;
-            height: 11px;
-            margin-right: 3px;
-            text-align: center;
-            font-size: 9pt;      /* larger check mark */
-            font-weight: bold;
-            line-height: 10px;   /* keeps the check visually centered */
-            display: inline-block;
-            vertical-align: middle;
+        @page { size: A4 portrait; margin: 10mm; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 8pt; margin: 0; padding: 0; color: #000; }
+        .page { width: 100%; }
+
+        .header-logos { width: 86%; margin: 0 auto; border-collapse: collapse; }
+        .header-logos td { border: none; padding: 0; vertical-align: middle; }
+        .logo-left { height: 82px; }
+        .logo-right { height: 64px; }
+
+        .title { margin: 2px 0 4px; text-align: center; font-family: "Times New Roman", serif; font-size: 18pt; font-weight: 600; color: #1d3f6e; }
+        .title-rule { border-top: 2px solid #8ea1c3; margin: 0 0 6px; }
+
+        .req-type-row { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+        .req-type-row td { border: none; padding: 0; text-align: right; }
+        .note { font-size: 7pt; font-style: italic; text-align: right; margin-bottom: 6px; }
+
+        .cb { border: 1px solid #000; width: 11px; height: 11px; display: inline-block; text-align: center; line-height: 10px; font-size: 9pt; font-weight: 700; margin-right: 4px; vertical-align: middle; }
+        .cb-label { display: inline-block; margin-left: 10px; white-space: nowrap; font-size: 8pt; }
+
+        .section-head { width: 100%; border-collapse: collapse; margin: 0 0 2px; }
+        .section-head td { border: none; padding: 0; font-weight: 700; font-size: 9pt; }
+        .section-head td.right { text-align: right; font-weight: 700; font-size: 9pt; width: 38%; }
+        .req-no-box { text-align: left; }
+        .req-no-label { font-family: "Times New Roman", serif; font-size: 8.5pt; font-weight: 700; white-space: nowrap; }
+        .req-no-value { display: inline; margin-left: 4px; font-size: 8.5pt; font-weight: 700; white-space: nowrap; }
+
+        .grid { width: 100%; border-collapse: collapse; border: 1px solid #000; }
+        .grid td { border: 1px solid #000; padding: 6px 6px 5px; vertical-align: top; }
+
+        .label { font-weight: 700; font-size: 8pt; }
+        .hint { font-weight: 400; font-style: italic; font-size: 7pt; }
+        .val { display: block; margin-top: 6px; font-size: 8pt; }
+        .val-line { display: block; border-bottom: 1px solid #666; height: 12px; margin-top: 4px; }
+
+        .box { border: 1px solid #000; padding: 6px; margin-top: 8px; }
+        .box-title { font-weight: 700; font-size: 8pt; margin-bottom: 4px; }
+        .box-title .hint { float: right; }
+        .systems { width: 100%; border-collapse: collapse; }
+        .systems td { border: none; padding: 2px 10px 2px 0; width: 33.33%; vertical-align: top; }
+
+        .two { width: 100%; border-collapse: collapse; border: 1px solid #000; margin-top: 8px; }
+        .two td { border: 1px solid #000; padding: 6px; vertical-align: top; width: 50%; }
+        .subline {
+            border-bottom: 1px solid #666;
+            min-height: 14px;
+            line-height: 1.2;
+            padding-bottom: 1px;
+            margin-top: 8px;
+            overflow: visible;
         }
-        .uarf-section { margin-top: 3px; }
-        .uarf-section-header { font-weight: bold; font-size: 7pt; margin-bottom: 2px; padding: 2px 0; border-bottom: 1px solid #ccc; }
-        .uarf-section-header span:last-child { float: right; font-weight: normal; }
-        /*
-         * Avoid border-collapse in DomPDF to prevent the last column border from disappearing.
-         * Also keep tables slightly under 100% width to avoid rounding overflow.
-         */
-        .uarf-table { width: 99.6%; border-collapse: separate; border-spacing: 0; border: 1px solid #000; font-size: 7pt; }
-        .uarf-table th, .uarf-table td { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 2px 4px; vertical-align: top; }
-        .uarf-table tr:last-child th, .uarf-table tr:last-child td { border-bottom: 0; }
-        .uarf-table th:last-child, .uarf-table td:last-child { border-right: 0; }
-        .uarf-table th { font-weight: bold; background: #f5f5f5; }
-        .uarf-systems-grid { border: 1px solid #000; padding: 4px; width: 99.6%; border-collapse: separate; border-spacing: 0; }
-        .clearfix { overflow: hidden; }
-        .mb-1 { margin-bottom: 2px; }
-        .signature-space { margin-top: 10px; border-top: 1px solid #ccc; padding-top: 6px; }
-        .sign-table { width: 100%; border-collapse: collapse; }
-        .sign-table td { border: none; padding: 0 6px; vertical-align: top; font-weight: bold; font-size: 8pt; }
-        .sign-line-row td { vertical-align: bottom; padding-top: 22px; }
-        .sign-line { border-bottom: 1px solid #000; height: 16px; }
-        .uarf-signatories-header { font-weight: bold; font-size: 7pt; margin-top: 0; margin-bottom: 4px; padding-top: 0; }
-        .sub-row td { white-space: nowrap; vertical-align: middle; }
+
+        .four { width: 100%; border-collapse: collapse; border: 1px solid #000; margin-top: 8px; }
+        .four td { border: 1px solid #000; padding: 6px; vertical-align: top; width: 50%; }
+        .full { border: 1px solid #000; border-top: none; padding: 6px; }
+        .full-bordered { border-top: 1px solid #000; }
+        .pdf-avoid-break { page-break-inside: avoid; break-inside: avoid; }
+        .mini { font-size: 7.5pt; }
+        .msp-right-shift { padding-top: 5px !important; }
+        .msp-line { margin-top: 3px; white-space: nowrap; }
+
+        /* Original inline layout; avoid fixed height:10px (PDF clips and merges adjacent cells). */
+        .pdf-cic-val {
+            display: inline-block;
+            border-bottom: 1px solid #666;
+            vertical-align: bottom;
+            line-height: 1.25;
+            min-height: 11px;
+            padding-bottom: 1px;
+            word-wrap: break-word;
+            overflow: visible;
+        }
+
+        .sign { margin-top: 8px; }
+        .sign-head { border-bottom: 1px solid #000; padding: 4px 2px; font-weight: 700; font-size: 8pt; }
+        .sign-body { border: 1px solid #000; border-top: none; }
+        .sign-grid { width: 100%; border-collapse: collapse; }
+        .sign-grid td { border-right: 1px solid #000; border-bottom: none; padding: 6px 8px; height: 74px; text-align: center; vertical-align: bottom; width: 33.33%; }
+        .sign-grid td:last-child { border-right: none; }
+        .sign-line { border-top: 1.5px solid #000; margin: 0 4px 8px; height: 0; }
+        .sign-cap { font-size: 8pt; line-height: 1.1; }
+
+        /* Single bordered content area; avoid forced blank pages between sections */
+        .page-box {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .page-header { margin-bottom: 4px; }
+        .pdf-page-break { page-break-before: always; }
+        .pdf-header-second { margin-top: 6mm; margin-bottom: 6px; }
     </style>
 </head>
 <body>
 @php
     $s = is_array($summary ?? null) ? $summary : [];
     $val = fn($key) => $s[$key] ?? '';
+    $coopNameVal = $val('Cooperative Name') !== '' ? $val('Cooperative Name') : $val('Coop Name & Branch');
+    $branchVal = $val('Branch');
 @endphp
 
-<div class="container">
-    <div class="uarf-page">
-        <div class="uarf-header">
-            <h1 class="uarf-title">User Access Request Form</h1>
-            <table style="border: none; margin: 0 auto; font-size: 7pt;"><tr>
-                @foreach (['New', 'Update', 'Removal'] as $type)
-                    <td style="border: none; padding: 0 12px 0 0;"><span class="uarf-cb">{!! str_contains($val('Request Type'), $type) ? '&#10003;' : '' !!}</span> {{ $type }}</td>
-                @endforeach
-            </tr></table>
-            <div class="uarf-note">*Check if request is new user, update an existing user, or removal of existing user</div>
-        </div>
+<div class="page">
+    <div class="page-header">
+        <table class="header-logos">
+            <tr>
+                <td style="text-align:left;">
+                    <img src="{{ public_path('MASS-SPECC Logo/MASS-SPECC Logo.png') }}" class="logo-left" alt="MASS-SPECC Logo">
+                </td>
+                <td style="text-align:right;">
+                    <img src="{{ public_path('MASS-SPECC Logo/Pinoy_Coop_Logo_21.png') }}" class="logo-right" alt="Pinoy Coop Logo">
+                </td>
+            </tr>
+        </table>
+        <div class="title">User Access Request Form</div>
+        <div class="title-rule"></div>
 
-        <div class="uarf-section">
-            <table style="width: 100%; border: none; margin-bottom: 2px;">
-                <tr>
-                    <td style="border: none; padding: 0; font-weight: bold; font-size: 7pt;">User Information</td>
-                    <td style="border: none; padding: 0; text-align: right; font-weight: normal;"></td>
-                </tr>
-            </table>
-            <div style="border-bottom: 1px solid #ccc; margin-bottom: 2px;"></div>
-            <table class="uarf-table">
-                <tr>
-                    <th style="width: 35%;">Full Name: (Surname, First Name and Middle Name)</th>
-                    <td colspan="4">{{ $val('Full Name') }}</td>
-                    <th>Request Number:</th>
-                    <td>{{ $val('Request Number') }}</td>
-                </tr>
-                <tr>
-                    <th>Coop Name &amp; Branch: (of the requesting coop)</th>
-                    <td colspan="4">{{ $val('Coop Name & Branch') }}</td>
-                    <th>Date:</th>
-                    <td>{{ $val('Date of Request') }}</td>
-                </tr>
-                <tr>
-                    <th>Address: (address of the coop)</th>
-                    <td colspan="4">{{ $val('Address') }}</td>
-                    <th>Mobile No:</th>
-                    <td>{{ $val('Mobile No') }}</td>
-                </tr>
-                <tr>
-                    <th>Place of Birth: (of the requesting user)</th>
-                    <td colspan="4">{{ $val('Place of Birth') }}</td>
-                    <th>Postal Code:</th>
-                    <td>{{ $val('Postal Code') }}</td>
-                </tr>
-                <tr>
-                    <th>Email Address: (email address of the requesting user)</th>
-                    <td colspan="4">{{ $val('Email Address') }}</td>
-                    <th>Gender:</th>
-                    <td>
-                        <table style="border: none; font-size: 7pt;"><tr>
-                            <td style="border: none; padding: 0 12px 0 0;"><span class="uarf-cb">{!! $val('Gender') === 'Male' ? '&#10003;' : '' !!}</span> Male</td>
-                            <td style="border: none; padding: 0;"><span class="uarf-cb">{!! $val('Gender') === 'Female' ? '&#10003;' : '' !!}</span> Female</td>
-                        </tr></table>
-                    </td>
-                </tr>
-            </table>
-        </div>
+        <table class="req-type-row">
+            <tr>
+                <td>
+                    @foreach (['New', 'Update', 'Removal'] as $type)
+                        <span class="cb-label"><span class="cb">{!! str_contains($val('Request Type'), $type) ? '&#10003;' : '' !!}</span> {{ $type }}</span>
+                    @endforeach
+                </td>
+            </tr>
+        </table>
+        <div class="note">*Check if request is new user, update an existing user, or removal of existing user</div>
+    </div>
 
-        <div class="uarf-section">
-            <table style="width: 100%; border: none; margin-bottom: 2px;"><tr>
-                <td style="border: none; padding: 0; font-weight: bold; font-size: 7pt;">Access Request For:</td>
-                <td style="border: none; padding: 0; text-align: right; font-weight: normal; font-style: italic; font-size: 6pt;">*select the system that the user will be using</td>
-            </tr></table>
-            <div style="border-bottom: 1px solid #ccc; margin-bottom: 2px;"></div>
-            @php
-                $systems = $val('Systems Requested');
-                $sysList = ['ATM Portal','SMS Portal','MSP-ISS Portal','MSP-ISS FTP','Helpdesk','PASS','CASH ONLINE','CORE 3.0','BIZMOTO PORTAL (Business Center)','PINOYCOOP PORTAL','MVM Portal'];
-            @endphp
-            <table class="uarf-systems-grid" style="width: 99.6%; border-collapse: separate; border-spacing: 0; border: 1px solid #000; margin: 0 auto;"><tr>
+    <div class="page-box">
+    <table class="section-head">
+        <tr>
+            <td>User Information</td>
+            <td class="right">
+                <div class="req-no-box">
+                    <span class="req-no-label">Resource Access Request Number:</span><span class="req-no-value">{{ $val('Request Number') }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="grid">
+        <tr>
+            <td colspan="3">
+                <span class="label">Full Name: (Surname, First Name and Middle Name)</span>
+                <span class="hint">*of the requesting user</span>
+                <span class="val">{{ $val('Full Name') }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span class="label">Cooperative name:</span> <span class="hint">*of the requesting coop</span>
+                <span class="val">{{ $coopNameVal }}</span>
+            </td>
+            <td>
+                <span class="label">Branch:</span> <span class="hint">*coop branch</span>
+                <span class="val">{{ $branchVal !== '' ? $branchVal : '—' }}</span>
+            </td>
+            <td>
+                <span class="label">Date:</span> <span class="hint">*date of request</span>
+                <span class="val">{{ $val('Date of Request') }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <span class="label">Mobile No:</span> <span class="hint">*of requesting user</span>
+                <span class="val">{{ $val('Mobile No') }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <span class="label">Address:</span> <span class="hint">*address of the coop</span>
+                <span class="val">{{ $val('Address') }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span class="label">Postal Code:</span>
+                <span class="val">{{ $val('Postal Code') }}</span>
+            </td>
+            <td colspan="2">
+                <span class="label">Gender:</span>
+                <span class="cb-label" style="margin-left:14px;"><span class="cb">{!! $val('Gender') === 'Male' ? '&#10003;' : '' !!}</span> Male</span>
+                <span class="cb-label"><span class="cb">{!! $val('Gender') === 'Female' ? '&#10003;' : '' !!}</span> Female</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span class="label">Place of Birth:</span> <span class="hint">*place of birth of the requesting user</span>
+                <span class="val">{{ $val('Place of Birth') }}</span>
+            </td>
+            <td colspan="2">
+                <span class="label">Email Address:</span> <span class="hint">*email address of the requesting user</span>
+                <span class="val">{{ $val('Email Address') }}</span>
+            </td>
+        </tr>
+    </table>
+
+    @php
+        $systems = $val('Systems Requested');
+        $sysList = config('access_request.system_modules', []);
+    @endphp
+
+    <div class="box">
+        <div class="box-title">
+            Access Request For:
+            <span class="hint">*select the system that the user will be using</span>
+        </div>
+        <table class="systems">
+            <tr>
                 @foreach($sysList as $i => $item)
-                    <td style="border: none; padding: 2px 8px 2px 4px; font-size: 7pt; width: 33%;"><span class="uarf-cb">{!! str_contains($systems, $item) ? '&#10003;' : '' !!}</span> {{ $item }}</td>
-                    @if(($i + 1) % 3 === 0 && $i < count($sysList) - 1)</tr><tr>@endif
-                @endforeach
-            </tr></table>
-        </div>
-
-        <div class="uarf-section">
-            <table class="uarf-table">
-                <tr>
-                    <th style="width: 50%;">Access Type: (usage of user to the system)</th>
-                    <th>Job Title/Designation: (of the requesting user)</th>
-                </tr>
-                <tr>
                     <td>
-                        <table style="border: none; font-size: 7pt;"><tr>
-                            <td style="border: none; padding: 0 12px 0 0;"><span class="uarf-cb">{!! $val('Access Type') === 'Permanent' ? '&#10003;' : '' !!}</span> Permanent</td>
-                            <td style="border: none; padding: 0 12px 0 0;"><span class="uarf-cb">{!! $val('Access Type') === 'Temporary' ? '&#10003;' : '' !!}</span> Temporary</td>
-                            @if($val('Access Type') === 'Temporary' && $val('Access End Date') && $val('Access End Date') !== '-')
-                                <td style="border: none; padding: 0 0 0 20px; white-space: nowrap;">End date: {{ $val('Access End Date') }}</td>
-                            @endif
-                        </tr></table>
+                        <span class="cb">{!! str_contains($systems, $item) ? '&#10003;' : '' !!}</span>{{ $item }}
                     </td>
-                    <td style="text-align: center;">{{ $val('Job Title / Designation') }}</td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="uarf-section">
-            <table class="uarf-table">
-                <tr>
-                    <th style="width: 50%;">For MVM Portal Access:</th>
-                    <th>For Core 3.0 Access:</th>
-                </tr>
-                <tr>
-                    <td>
-                        @php $mvm = $val('MVM Roles'); @endphp
-                        <table style="border: none; font-size: 7pt;"><tr>
-                            <td style="border: none; padding: 0 12px 0 0;"><span class="uarf-cb">{!! str_contains($mvm, 'Branch Uploader') ? '&#10003;' : '' !!}</span> Branch Uploader</td>
-                            <td style="border: none; padding: 0;"><span class="uarf-cb">{!! str_contains($mvm, 'Data Consolidator') ? '&#10003;' : '' !!}</span> Data Consolidator</td>
-                        </tr></table>
-                    </td>
-                    <td>
-                        <div class="mb-1">User Roles:</div>
-                        @php $core = $val('Core 3.0 Roles'); $coreRoles = ['New Accounts','Teller','Accounting','Collector','Loans','System Admin']; @endphp
-                        <table style="border: none; font-size: 7pt;"><tr>
-                        @foreach($coreRoles as $i => $role)
-                            <td style="border: none; padding: 0 10px 0 0;"><span class="uarf-cb">{!! str_contains($core, $role) ? '&#10003;' : '' !!}</span> {{ $role }}</td>
-                            @if(($i + 1) % 3 === 0 && $i < 5)</tr><tr>@endif
-                        @endforeach
-                        </tr></table>
-                    </td>
-                </tr>
-                <tr>
-                    <th>For ATM Portal Access:</th>
-                    <th>For MSP-ISS FTP Access:</th>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="mb-1">Access Level:</div>
-                        <table style="border: none; font-size: 7pt;"><tr>
-                            <td style="border: none; padding: 1px 0;"><span class="uarf-cb">{!! str_contains($val('ATM Access Level'), 'Maker') ? '&#10003;' : '' !!}</span> Maker (Card Issuance, Edit Information)</td>
+                    @if(($i + 1) % 3 === 0 && $i < count($sysList) - 1)
                         </tr><tr>
-                            <td style="border: none; padding: 1px 0;"><span class="uarf-cb">{!! str_contains($val('ATM Access Level'), 'Approver') ? '&#10003;' : '' !!}</span> Approver (Approval)</td>
-                        </tr></table>
+                    @endif
+                @endforeach
+            </tr>
+        </table>
+    </div>
+
+    <table class="two">
+        <tr>
+            <td>
+                <span class="label">Access Type:</span> <span class="hint">*usage of user to the system</span><br>
+                <span class="cb">{!! $val('Access Type') === 'Permanent' ? '&#10003;' : '' !!}</span> Permanent
+                <span style="margin-left:16px;"><span class="cb">{!! $val('Access Type') === 'Temporary' ? '&#10003;' : '' !!}</span> Temporary</span>
+                @if($val('Access Type') === 'Temporary' && $val('Access End Date') && $val('Access End Date') !== '-')
+                    <span style="margin-left:16px;">End Date: {{ $val('Access End Date') }}</span>
+                @endif
+            </td>
+            <td>
+                <span class="label">Job Title/Designation:</span> <span class="hint">*of the requesting user</span>
+                <div class="subline">{{ $val('Job Title / Designation') }}</div>
+            </td>
+        </tr>
+    </table>
+
+    @php
+        $mvm = $val('MVM Roles');
+        $core = $val('Core 3.0 Roles');
+        $atm = $val('ATM Access Level');
+        $ftpRoles = $val('FTP User Roles');
+        $pcdissRoles = $val('PCDISS User Roles');
+    @endphp
+
+    <table class="four">
+        <tr>
+            <td>
+                <span class="label">For MVM Portal Access:</span><br>
+                <span class="cb">{!! str_contains($mvm, 'Branch Uploader') ? '&#10003;' : '' !!}</span> Branch Uploader
+                <span style="margin-left:16px;"><span class="cb">{!! str_contains($mvm, 'Data Consolidator') ? '&#10003;' : '' !!}</span> Data Consolidator</span>
+            </td>
+            <td>
+                <span class="label">For Core 3.0 Access:</span><br>
+                <span class="mini">User Roles:</span><br>
+                @foreach(['New Accounts','Teller','Accounting','Collector','Loans','System Admin'] as $role)
+                    <span class="cb">{!! str_contains($core, $role) ? '&#10003;' : '' !!}</span> {{ $role }}&nbsp;&nbsp;
+                @endforeach
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span class="label">For ATM Portal Access:</span><br>
+                <span class="mini">Access Level:</span><br>
+                <span class="cb">{!! str_contains($atm, 'Maker') ? '&#10003;' : '' !!}</span> Maker (Card Issuance, Edit Information)<br>
+                <span class="cb">{!! str_contains($atm, 'Approver') ? '&#10003;' : '' !!}</span> Approver (Approval)
+            </td>
+            <td>
+                <span class="label">For MSP-ISS FTP Access:</span><br>
+                <span class="mini">Are you allowed to use MASS-SPECC's FTP Access?</span><br>
+                <span class="cb">{!! $val('FTP Allowed') === 'Yes' ? '&#10003;' : '' !!}</span> Yes
+                <span style="margin-left:16px;"><span class="cb">{!! $val('FTP Allowed') === 'No' ? '&#10003;' : '' !!}</span> No</span>
+            </td>
+        </tr>
+    </table>
+
+    <div class="full pdf-avoid-break">
+        <span class="label">For MSP-ISS Portal Access:</span>
+        <table style="width:100%; border-collapse:collapse; margin-top:4px;">
+            <tr>
+                <td style="border:none; padding:2px 8px 2px 0; width:50%;">
+                    <span class="mini">Coop Code (MBWIN):</span>
+                    <span class="pdf-cic-val" style="width:62%;">{{ $val('MSP Coop Code (MBWIN)') }}</span>
+                </td>
+                <td style="border:none; padding:2px 0; width:50%;">
+                    <span class="mini">Provider Code (CIC):</span>
+                    <span class="pdf-cic-val" style="width:62%;">{{ $val('FTP Provider Code (CIC)') }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td style="border:none; padding:2px 8px 2px 0;">
+                    <span class="mini">User Name (CIC):</span>
+                    <span class="pdf-cic-val" style="width:66%;">{{ $val('MSP User Name (CIC)') }}</span>
+                </td>
+                <td style="border:none; padding:2px 0;">
+                    <span class="mini">Password (CIC):</span>
+                    <span class="pdf-cic-val" style="width:66%;">{{ $val('FTP Password (CIC)') }}</span>
+                </td>
+            </tr>
+        </table>
+        <table style="width:100%; border-collapse:collapse; margin-top:3px;">
+            <tr>
+                <td style="border:none; width:37%; vertical-align:top; padding:2px 8px 2px 0;">
+                    <div class="mini">Submission Type:</div>
+                    <div class="msp-line"><span class="cb">{!! $val('MSP Submission Type') === 'Test' ? '&#10003;' : '' !!}</span> Test</div>
+                    <div class="msp-line"><span class="cb">{!! $val('MSP Submission Type') === 'Production' ? '&#10003;' : '' !!}</span> Production</div>
+                </td>
+                <td style="border:none; width:24%; vertical-align:top; padding:2px 8px 2px 0;">
+                    <div class="mini">End Date:</div>
+                    <div class="pdf-cic-val" style="display:block; width:100%; margin-top:6px;">{{ $val('MSP End Date') }}</div>
+                </td>
+                <td style="border:none; width:39%; vertical-align:top; padding:2px 0;">
+                    <div class="mini">User Role:</div>
+                    <div class="msp-line">
+                        <span><span class="cb">{!! str_contains($ftpRoles, 'Branch Supervisor') ? '&#10003;' : '' !!}</span> Branch Supervisor</span>
+                        <span style="margin-left:6px;"><span class="cb">{!! str_contains($ftpRoles, 'Data Consolidator') ? '&#10003;' : '' !!}</span> Data Consolidator</span>
+                    </div>
+                    <div class="msp-line"><span class="cb">{!! str_contains($ftpRoles, 'Staff') ? '&#10003;' : '' !!}</span> Staff</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    </div>
+
+    <div class="pdf-page-break"></div>
+    <div class="page-header pdf-header-second">
+        <table class="header-logos">
+            <tr>
+                <td style="text-align:left;">
+                    <img src="{{ public_path('MASS-SPECC Logo/MASS-SPECC Logo.png') }}" class="logo-left" alt="MASS-SPECC Logo">
+                </td>
+                <td style="text-align:right;">
+                    <img src="{{ public_path('MASS-SPECC Logo/Pinoy_Coop_Logo_21.png') }}" class="logo-right" alt="Pinoy Coop Logo">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="page-box">
+    <div class="full full-bordered pdf-avoid-break">
+        <span class="label">For PCDISS Access:</span>
+        <table style="width:100%; border-collapse:collapse; margin-top:4px;">
+            <tr>
+                <td style="border:none; padding:2px 8px 2px 0; width:50%;">
+                    <span class="mini">Provider Code (CIC):</span>
+                    <span class="pdf-cic-val" style="width:62%;">{{ $val('PCDISS Provider Code (CIC)') }}</span>
+                </td>
+                <td style="border:none; padding:2px 0; width:50%;"></td>
+            </tr>
+            <tr>
+                <td style="border:none; padding:2px 8px 2px 0; width:50%;">
+                    <span class="mini">Username (CIC):</span>
+                    <span class="pdf-cic-val" style="width:62%;">{{ $val('PCDISS Username (CIC)') }}</span>
+                </td>
+                <td style="border:none; padding:2px 0; width:50%;">
+                    <span class="mini">Password (CIC):</span>
+                    <span class="pdf-cic-val" style="width:62%;">{{ $val('PCDISS Password (CIC)') }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td style="border:none; width:50%; vertical-align:top; padding:2px 8px 2px 0;">
+                    <div class="mini">Submission Type:</div>
+                    <div class="msp-line">
+                        <span><span class="cb">{!! $val('PCDISS Submission Type') === 'Test' ? '&#10003;' : '' !!}</span> Test</span>
+                        <span style="margin-left:8px;"><span class="cb">{!! $val('PCDISS Submission Type') === 'Production' ? '&#10003;' : '' !!}</span> Production</span>
+                    </div>
+                </td>
+                <td style="border:none; width:50%; vertical-align:top; padding:2px 0;">
+                    <div class="mini">User Role:</div>
+                    <div class="msp-line">
+                        <span><span class="cb">{!! str_contains($pcdissRoles, 'Viewer') ? '&#10003;' : '' !!}</span> Viewer</span>
+                        <span style="margin-left:8px;"><span class="cb">{!! str_contains($pcdissRoles, 'Uploader') ? '&#10003;' : '' !!}</span> Uploader</span>
+                        <span style="margin-left:8px;"><span class="cb">{!! str_contains($pcdissRoles, 'Approver') ? '&#10003;' : '' !!}</span> Approver</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="full full-bordered" style="margin-top:6px;">
+        <span class="label">For SSL VPN Access:</span>
+        <div class="mini" style="margin-top:4px;">No additional access details are required for this system on this form.</div>
+    </div>
+    <div class="sign pdf-avoid-break">
+        <div class="sign-head">Approval / Authorization by the Immediate Supervisor / Unit Head of the Requesting User: (COOP)</div>
+        <div class="sign-body">
+            <table class="sign-grid">
+                <tr>
+                    <td>
+                        <div class="sign-line"></div>
+                        <div class="sign-cap">Signature over Printed Name</div>
                     </td>
                     <td>
-                        <div class="mb-1">Are you allowed to use MASS-SPECC's FTP Access?</div>
-                        <table style="border: none; font-size: 7pt;"><tr>
-                            <td style="border: none; padding: 0 12px 0 0;"><span class="uarf-cb">{!! $val('FTP Allowed') === 'Yes' ? '&#10003;' : '' !!}</span> Yes</td>
-                            <td style="border: none; padding: 0;"><span class="uarf-cb">{!! $val('FTP Allowed') === 'No' ? '&#10003;' : '' !!}</span> No</td>
-                        </tr></table>
+                        <div class="sign-line"></div>
+                        <div class="sign-cap">Designation</div>
                     </td>
-                </tr>
-                <tr>
-                    <th colspan="2">For MSP-ISS Portal Access:</th>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <table style="width: 100%; border: none; font-size: 7pt;">
-                            <tr>
-                                <td style="width: 28%; border: none; padding: 1px 4px 1px 0; vertical-align: top;">Coop Code (MBWIN): {{ $val('MSP Coop Code (MBWIN)') }}</td>
-                                <td style="width: 28%; border: none; padding: 1px 4px; vertical-align: top;">User Name (CIC): {{ $val('MSP User Name (CIC)') }}</td>
-                                <td style="width: 44%; border: none; padding: 1px 0 1px 4px; vertical-align: top;">
-                                    <table style="border: none; font-size: 7pt;">
-                                        <tr class="sub-row">
-                                            <td style="border: none; padding: 0 8px 0 0;">Submission Type:</td>
-                                            <td style="border: none; padding: 0 10px 0 0;"><span class="uarf-cb">{!! $val('MSP Submission Type') === 'Test' ? '&#10003;' : '' !!}</span> Test</td>
-                                            <td style="border: none; padding: 0 10px 0 0;"><span class="uarf-cb">{!! $val('MSP Submission Type') === 'Production' ? '&#10003;' : '' !!}</span> Production</td>
-                                            <td style="border: none; padding: 0;">@if($val('MSP End Date'))End Date: {{ $val('MSP End Date') }}@endif</td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="border: none; padding: 1px 4px 1px 0;">Provider Code (CIC): {{ $val('FTP Provider Code (CIC)') }}</td>
-                                <td style="border: none; padding: 1px 4px;">Password (CIC): {{ $val('FTP Password (CIC)') }}</td>
-                                <td style="border: none; padding: 1px 0 1px 4px;">
-                                    @php $ftpRoles = $val('FTP User Roles'); @endphp
-                                    User Role:
-                                    <table style="border: none; font-size: 7pt; margin-top: 2px;"><tr>
-                                        <td style="border: none; padding: 0 12px 0 0;"><span class="uarf-cb">{!! str_contains($ftpRoles, 'Branch Supervisor') ? '&#10003;' : '' !!}</span> Branch Supervisor</td>
-                                        <td style="border: none; padding: 0 12px 0 0;"><span class="uarf-cb">{!! str_contains($ftpRoles, 'Data Consolidator') ? '&#10003;' : '' !!}</span> Data Consolidator</td>
-                                        <td style="border: none; padding: 0;"><span class="uarf-cb">{!! str_contains($ftpRoles, 'Staff') ? '&#10003;' : '' !!}</span> Staff</td>
-                                    </tr></table>
-                                </td>
-                            </tr>
-                        </table>
+                    <td>
+                        <div class="sign-line"></div>
+                        <div class="sign-cap">Date Signed</div>
                     </td>
                 </tr>
             </table>
         </div>
-
-        <div class="signature-space">
-            <table class="sign-table">
-                <tr>
-                    <td style="width: 33%; padding-left: 0;">Requested by:</td>
-                    <td style="width: 34%;">Noted by:</td>
-                    <td style="width: 33%; padding-right: 0;">Approved by:</td>
-                </tr>
-            </table>
-            <div style="border-top: 1px solid #d9d9d9; margin-top: 6px;"></div>
-            <table class="sign-table sign-line-row">
-                <tr>
-                    <td style="width: 33%; padding-left: 0; padding-right: 18px;">
-                        <div class="sign-line"></div>
-                    </td>
-                    <td style="width: 34%; padding: 0 18px;">
-                        <div class="sign-line"></div>
-                    </td>
-                    <td style="width: 33%; padding-right: 0; padding-left: 18px;">
-                        <div class="sign-line"></div>
-                    </td>
-                </tr>
-            </table>
-        </div>
+    </div>
     </div>
 </div>
 </body>

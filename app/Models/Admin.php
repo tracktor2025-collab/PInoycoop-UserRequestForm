@@ -2,17 +2,22 @@
 
 namespace App\Models;
 
+use App\Notifications\AdminResetPassword;
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class Admin extends Authenticatable
+class Admin extends Authenticatable implements CanResetPasswordContract
 {
+    use CanResetPassword;
     use Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'password',
+        'role',
         'position',
         'department',
         'contact_number',
@@ -42,5 +47,15 @@ class Admin extends Authenticatable
         $secret = $this->two_factor_secret;
 
         return is_string($secret) && $secret !== '';
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return (string) $this->role === 'super_admin';
+    }
+
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new AdminResetPassword($token));
     }
 }

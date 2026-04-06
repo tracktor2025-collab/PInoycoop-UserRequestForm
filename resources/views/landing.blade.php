@@ -12,6 +12,16 @@
         <main class="container landing-main">
             <div class="row align-items-center justify-content-center g-5">
                 <div class="col-12 col-lg-6">
+                    <div class="landing-brand mb-3">
+                        <img
+                            src="{{ asset('MASS-SPECC Logo/MASS-SPECC Logo.png') }}"
+                            alt="MASS-SPECC Cooperative Development Center"
+                            class="landing-logo"
+                            width="280"
+                            decoding="async"
+                            loading="lazy"
+                        >
+                    </div>
                     <div class="landing-badge mb-3">
                         <span class="landing-badge-dot"></span>
                         MASS-SPECC Cooperative · Internal

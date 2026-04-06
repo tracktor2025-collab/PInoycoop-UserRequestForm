@@ -61,6 +61,10 @@
                 <p class="info-value">{{ $currentAdmin->email ?? 'N/A' }}</p>
             </div>
             <div class="info-item">
+                <div class="info-label">Role</div>
+                <p class="info-value">{{ isset($currentAdmin) && $currentAdmin->isSuperAdmin() ? 'Super Admin' : 'Admin' }}</p>
+            </div>
+            <div class="info-item">
                 <div class="info-label">Position</div>
                 <p class="info-value">{{ $currentAdmin->position ?? 'Not set' }}</p>
             </div>
@@ -171,6 +175,16 @@
 
                 <div class="row g-3 mt-1">
                     <div class="col-md-4">
+                        <label class="form-label" for="role">Role</label>
+                        <select id="role" name="role" class="form-select @error('role') is-invalid @enderror" required>
+                            <option value="admin" {{ old('role', 'admin') === 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="super_admin" {{ old('role') === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                        </select>
+                        @error('role')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label" for="position">Position</label>
                         <input id="position" type="text" name="position" class="form-control @error('position') is-invalid @enderror" value="{{ old('position') }}" maxlength="255" placeholder="e.g. IT Supervisor">
                         @error('position')
@@ -232,6 +246,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Email</th>
+                    <th>Role</th>
                     <th>Position</th>
                     <th>Department</th>
                     <th>Contact</th>
@@ -249,6 +264,13 @@
                             @endif
                         </td>
                         <td>{{ $admin->email }}</td>
+                        <td>
+                            @if($admin->isSuperAdmin())
+                                <span class="badge text-bg-primary">Super Admin</span>
+                            @else
+                                <span class="badge text-bg-secondary">Admin</span>
+                            @endif
+                        </td>
                         <td>{{ $admin->position ?: '-' }}</td>
                         <td>{{ $admin->department ?: '-' }}</td>
                         <td>{{ $admin->contact_number ?: '-' }}</td>
@@ -263,7 +285,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted">No admin accounts yet.</td>
+                        <td colspan="8" class="text-center text-muted">No admin accounts yet.</td>
                     </tr>
                 @endforelse
                 </tbody>

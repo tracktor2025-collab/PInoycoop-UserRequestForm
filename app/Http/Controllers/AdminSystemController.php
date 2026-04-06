@@ -6,12 +6,35 @@ use App\Models\AccessRequest;
 use App\Models\AuditLog;
 use App\Services\AuditLogger;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 
 class AdminSystemController extends Controller
 {
+    private function classifyReportPeriod(CarbonInterface $start, CarbonInterface $end): string
+    {
+        if ($start->toDateString() === $end->toDateString()) {
+            return 'daily';
+        }
+
+        if ($start->day === 1
+            && $end->day === $end->daysInMonth
+            && $start->month === $end->month
+            && $start->year === $end->year) {
+            return 'monthly';
+        }
+
+        if ($start->month === 1 && $start->day === 1
+            && $end->month === 12 && $end->day === 31
+            && $start->year === $end->year) {
+            return 'yearly';
+        }
+
+        return 'custom_range';
+    }
+
     public function index(Request $request): View
     {
         $year = (int) $request->query('year', now()->year);
@@ -82,10 +105,6 @@ class AdminSystemController extends Controller
             'MVM Portal',
         ];
 
-        // Default report date range = current month.
-        $defaultStartDate = Carbon::createFromDate(now()->year, now()->month, 1)->toDateString();
-        $defaultEndDate = now()->copy()->endOfMonth()->toDateString();
-
         return view('admin.system-management', [
             'year' => $year,
             'yearOptions' => $yearOptions,
@@ -95,8 +114,8 @@ class AdminSystemController extends Controller
             'rejectedCounts' => $rejected,
             'totalCounts' => $totals,
             'systemModules' => $systemModules,
-            'defaultReportStartDate' => $defaultStartDate,
-            'defaultReportEndDate' => $defaultEndDate,
+            'defaultReportDay' => now()->toDateString(),
+            'defaultReportMonth' => now()->format('Y-m'),
         ]);
     }
 
@@ -104,19 +123,29 @@ class AdminSystemController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $scope = (string) $request->query('scope', 'request');
-        if (! in_array($scope, ['request', 'reports', 'all'], true)) {
+        if (! in_array($scope, ['request', 'auth', 'form', 'approval', 'reports', 'all'], true)) {
             $scope = 'request';
         }
 
         $logs = AuditLog::query()
             ->when($scope === 'request', function ($q): void {
-                // Request-related events (approval decisions).
                 $q->where(function ($sub): void {
-                    $sub->where('action', 'like', 'approval.%');
+                    $sub->where('action', 'like', 'approval.%')
+                        ->orWhere('action', 'like', 'form.%');
                 });
             })
+            ->when($scope === 'auth', function ($q): void {
+                $q->where('action', 'like', 'auth.%');
+            })
+            ->when($scope === 'form', function ($q): void {
+                $q->where(function ($sub): void {
+                    $sub->where('action', 'like', 'form.%');
+                });
+            })
+            ->when($scope === 'approval', function ($q): void {
+                $q->where('action', 'like', 'approval.%');
+            })
             ->when($scope === 'reports', function ($q): void {
-                // Report generation events.
                 $q->where('action', 'like', 'report.%');
             })
             ->when($search !== '', function ($q) use ($search): void {
@@ -193,6 +222,7 @@ class AdminSystemController extends Controller
             $systems = is_array($req->systems) ? $req->systems : [];
             $systems = array_values(array_unique(array_filter(array_map(static function ($s): string {
                 $val = trim((string) $s);
+
                 return $val === '' ? '' : $val;
             }, $systems), static fn (string $s): bool => $s !== '')));
 
@@ -220,13 +250,16 @@ class AdminSystemController extends Controller
 
         // Show full exact date range in the report header.
         // Example: "Mar 01, 2026 - Mar 31, 2026"
-        $periodLabel = $start->format('M d, Y') . ' - ' . $end->format('M d, Y');
+        $periodLabel = $start->format('M d, Y').' - '.$end->format('M d, Y');
+
+        $reportPeriod = $this->classifyReportPeriod($start, $end);
 
         AuditLogger::log(
             $request,
             'report.generated',
             sprintf(
-                'Generated report (%s) for %s | system=%s | statuses=%s | total=%d',
+                'Generated %s report (%s) for %s | system=%s | statuses=%s | total=%d',
+                $reportPeriod,
                 (string) $validated['format'],
                 (string) $periodLabel,
                 $system,
@@ -242,11 +275,13 @@ class AdminSystemController extends Controller
                 'statuses' => $statuses,
                 'format' => (string) $validated['format'],
                 'totalRequests' => $totalRequests,
+                'report_period' => $reportPeriod,
             ]
         );
 
         return response()->json([
             'periodLabel' => $periodLabel,
+            'reportPeriod' => $reportPeriod,
             'filters' => [
                 'start_date' => $start->toDateString(),
                 'end_date' => $end->toDateString(),

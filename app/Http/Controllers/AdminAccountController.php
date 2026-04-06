@@ -13,6 +13,13 @@ use PragmaRX\Google2FA\Google2FA;
 
 class AdminAccountController extends Controller
 {
+    public function myAccount(Request $request): View
+    {
+        $admin = $this->adminFromSession($request);
+
+        return view('admin.my-account', compact('admin'));
+    }
+
     public function adminsIndex(Request $request): View
     {
         // Paginate existing admins (5 per page).
@@ -43,7 +50,7 @@ class AdminAccountController extends Controller
 
         AuditLogger::log($request, 'account.password_changed', 'Updated their own password.', Admin::class, $admin->id);
 
-        return redirect()->route('admin.account.admins')->with('success', 'Your password has been updated.');
+        return redirect()->route($this->accountLandingRoute($admin))->with('success', 'Your password has been updated.');
     }
 
     public function updateEmail(Request $request): RedirectResponse
@@ -76,7 +83,7 @@ class AdminAccountController extends Controller
             ['from' => $oldEmail, 'to' => $admin->email],
         );
 
-        return redirect()->route('admin.account.admins')->with('success', 'Your email address has been updated.');
+        return redirect()->route($this->accountLandingRoute($admin))->with('success', 'Your email address has been updated.');
     }
 
     public function storeAdmin(Request $request, Google2FA $google2fa): RedirectResponse
@@ -92,6 +99,7 @@ class AdminAccountController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:admins,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'role' => ['required', 'string', Rule::in(['admin', 'super_admin'])],
             'position' => ['nullable', 'string', 'max:255'],
             'department' => ['nullable', 'string', 'max:255'],
             'contact_number' => ['nullable', 'string', 'max:50'],
@@ -107,6 +115,7 @@ class AdminAccountController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => $validated['password'],
+            'role' => $validated['role'],
             'position' => $validated['position'] ?? null,
             'department' => $validated['department'] ?? null,
             'contact_number' => $validated['contact_number'] ?? null,
@@ -115,13 +124,18 @@ class AdminAccountController extends Controller
         AuditLogger::log(
             $request,
             'account.admin_created',
-            sprintf('Created admin %s <%s>.', $validated['name'], $validated['email']),
+            sprintf(
+                'Created %s account %s <%s>.',
+                $validated['role'] === 'super_admin' ? 'super admin' : 'admin',
+                $validated['name'],
+                $validated['email']
+            ),
             Admin::class,
             $newAdmin->id,
-            ['name' => $validated['name'], 'email' => $validated['email']],
+            ['name' => $validated['name'], 'email' => $validated['email'], 'role' => $validated['role']],
         );
 
-        return redirect()->route('admin.account.admins')->with('success', 'New admin account created.');
+        return redirect()->route('admin.account.admins')->with('success', 'New account created successfully.');
     }
 
     private function adminFromSession(Request $request): Admin
@@ -132,5 +146,10 @@ class AdminAccountController extends Controller
         abort_if($admin === null, 403);
 
         return $admin;
+    }
+
+    private function accountLandingRoute(Admin $admin): string
+    {
+        return $admin->isSuperAdmin() ? 'admin.account.admins' : 'admin.account.my';
     }
 }

@@ -155,6 +155,25 @@
             transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
             position: relative;
         }
+        .dashboard-switch-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.38rem 0.75rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.14);
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        .dashboard-switch-btn:hover {
+            background: #fff;
+            color: #5161ce;
+            border-color: #fff;
+        }
         .logout-btn-nav:hover {
             color: #fff;
         }
@@ -197,6 +216,15 @@
         .table > :not(caption) > * > * {
             border-color: #eef1fa;
         }
+        .table-sort-link {
+            color: inherit;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .table-sort-link:hover {
+            color: #5161ce;
+            text-decoration: underline;
+        }
         @media (max-width: 991px) {
             #navbarSupportedContent > ul.navbar-nav > li > a.nav-link,
             .logout-btn-nav {
@@ -219,46 +247,66 @@
     @stack('styles')
 </head>
 <body>
+@php
+    $isSuperAdmin = isset($currentAdmin) && method_exists($currentAdmin, 'isSuperAdmin') && $currentAdmin->isSuperAdmin();
+@endphp
 <div class="nav-shell">
     <div class="nav-inner">
         <nav class="navbar navbar-expand-lg navbar-mainbg">
-            <a class="navbar-brand navbar-logo" href="{{ route('admin.dashboard') }}">Access Request Admin</a>
+            <a class="navbar-brand navbar-logo" href="{{ $isSuperAdmin ? route('admin.super.dashboard') : route('admin.dashboard') }}">
+                {{ $isSuperAdmin ? 'Access Request Super Admin' : 'Access Request Admin' }}
+            </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <i class="bi bi-list text-white"></i>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto align-items-lg-center">
                 <div class="hori-selector"><div class="left"></div><div class="right"></div></div>
-                <li class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2"></i>Dashboard</a>
+                <li class="nav-item {{ request()->routeIs('admin.dashboard') || request()->routeIs('admin.super.dashboard') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ $isSuperAdmin ? route('admin.super.dashboard') : route('admin.dashboard') }}"><i class="bi bi-speedometer2"></i>Dashboard</a>
                 </li>
-                <li class="nav-item {{ request()->routeIs('admin.approvals') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('admin.approvals') }}"><i class="bi bi-clipboard-check"></i>Approval Module</a>
-                </li>
+                @if(! $isSuperAdmin)
+                    <li class="nav-item {{ request()->routeIs('admin.approvals') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('admin.approvals') }}"><i class="bi bi-clipboard-check"></i>Approval Module</a>
+                    </li>
+                    <li class="nav-item {{ request()->routeIs('admin.account.my') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('admin.account.my') }}"><i class="bi bi-person-circle"></i>My Account</a>
+                    </li>
+                @endif
                 <li class="nav-item {{ request()->routeIs('admin.pdf.archive') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('admin.pdf.archive') }}"><i class="bi bi-file-earmark-pdf"></i>PDF Backup Module</a>
                 </li>
-                <li class="nav-item {{ request()->routeIs('admin.account.*') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('admin.account.admins') }}"><i class="bi bi-shield-lock"></i>Admin accounts</a>
-                </li>
-                <li class="nav-item dropdown {{ request()->routeIs('admin.system.*') ? 'active' : '' }}">
-                    <a class="nav-link dropdown-toggle" href="#" id="adminSystemDropdown" role="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false"><i class="bi bi-gear-wide-connected"></i>System management</a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm py-2" aria-labelledby="adminSystemDropdown">
-                        <li><h6 class="dropdown-header text-uppercase small text-muted mb-1">System management</h6></li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('admin.system.index') }}">
-                                <i class="bi bi-grid text-secondary" style="width: 1.1rem;"></i>
-                                <span>Overview</span>
+                @if($isSuperAdmin)
+                    @if(request()->routeIs('admin.dashboard'))
+                        <li class="nav-item d-flex align-items-center me-lg-2 my-2 my-lg-0">
+                            <a class="dashboard-switch-btn" href="{{ route('super.dashboard') }}">
+                                <i class="bi bi-shield-lock"></i>
+                                <span>Login as Super Admin</span>
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('admin.system.audit') }}">
-                                <i class="bi bi-clock-history text-secondary" style="width: 1.1rem;"></i>
-                                <span>Audit Trail (History Log)</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                    @endif
+                    <li class="nav-item {{ request()->routeIs('admin.account.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('admin.account.admins') }}"><i class="bi bi-shield-lock"></i>Admin accounts</a>
+                    </li>
+                    <li class="nav-item dropdown {{ request()->routeIs('admin.system.*') ? 'active' : '' }}">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminSystemDropdown" role="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false"><i class="bi bi-gear-wide-connected"></i>System management</a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm py-2" aria-labelledby="adminSystemDropdown">
+                            <li><h6 class="dropdown-header text-uppercase small text-muted mb-1">System management</h6></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('admin.system.index') }}">
+                                    <i class="bi bi-grid text-secondary" style="width: 1.1rem;"></i>
+                                    <span>Overview</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('admin.system.audit') }}">
+                                    <i class="bi bi-clock-history text-secondary" style="width: 1.1rem;"></i>
+                                    <span>Audit Trail (History Log)</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                @endif
                 <li class="nav-item">
                     <form method="POST" action="{{ route('admin.logout') }}" class="d-inline">
                         @csrf

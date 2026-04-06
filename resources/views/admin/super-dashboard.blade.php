@@ -1,11 +1,11 @@
 @extends('admin.layout')
 
-@section('title', 'Admin Dashboard')
+@section('title', 'Super Admin Dashboard')
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h1 class="page-title">Dashboard Overview</h1>
+            <h1 class="page-title">Super Admin Dashboard</h1>
             <p class="page-subtitle">Quick metrics and latest submitted access requests</p>
         </div>
     </div>
@@ -40,7 +40,7 @@
     <div class="dashboard-card p-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h5 mb-0">Recent Requests</h2>
-            <a href="{{ route('admin.approvals') }}" class="btn btn-sm btn-outline-primary">Open Approval Module</a>
+            <a href="{{ route('admin.pdf.archive') }}" class="btn btn-sm btn-outline-primary">Open PDF Backup Module</a>
         </div>
 
         <form method="GET" class="d-flex gap-2 align-items-center mb-3">
@@ -53,7 +53,7 @@
             >
             <button type="submit" class="btn btn-sm btn-primary">Search</button>
             @if(trim((string) request('search', '')) !== '')
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+                <a href="{{ route('admin.super.dashboard') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
             @endif
         </form>
 
@@ -93,9 +93,9 @@
                 </tbody>
             </table>
         </div>
-            <div class="mt-3">
-                {{ $recent->links() }}
-            </div>
+        <div class="mt-3">
+            {{ $recent->links() }}
+        </div>
     </div>
 
     <div class="dashboard-card p-4 mt-3">
@@ -124,15 +124,15 @@
             var values = {!! json_encode($pieValues ?? []) !!};
 
             var palette = [
-                'rgba(79, 70, 229, 0.85)',  // indigo
-                'rgba(16, 185, 129, 0.75)', // emerald
-                'rgba(245, 158, 11, 0.75)', // amber
-                'rgba(239, 68, 68, 0.75)', // red
-                'rgba(59, 130, 246, 0.75)', // blue
-                'rgba(236, 72, 153, 0.75)', // pink
-                'rgba(99, 102, 241, 0.75)', // violet
-                'rgba(20, 184, 166, 0.75)', // teal
-                'rgba(107, 114, 128, 0.75)' // gray
+                'rgba(79, 70, 229, 0.85)',
+                'rgba(16, 185, 129, 0.75)',
+                'rgba(245, 158, 11, 0.75)',
+                'rgba(239, 68, 68, 0.75)',
+                'rgba(59, 130, 246, 0.75)',
+                'rgba(236, 72, 153, 0.75)',
+                'rgba(99, 102, 241, 0.75)',
+                'rgba(20, 184, 166, 0.75)',
+                'rgba(107, 114, 128, 0.75)'
             ];
 
             var colors = [];

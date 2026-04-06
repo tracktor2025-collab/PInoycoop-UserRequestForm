@@ -21,7 +21,10 @@
             <div class="col-12 col-lg-4">
                 <label class="form-label">Scope</label>
                 <select name="scope" class="form-select">
-                    <option value="request" {{ ($scope ?? 'request') === 'request' ? 'selected' : '' }}>Request</option>
+                    <option value="request" {{ ($scope ?? 'request') === 'request' ? 'selected' : '' }}>Forms &amp; approvals</option>
+                    <option value="auth" {{ ($scope ?? 'request') === 'auth' ? 'selected' : '' }}>Log in</option>
+                    <option value="form" {{ ($scope ?? 'request') === 'form' ? 'selected' : '' }}>Form activity</option>
+                    <option value="approval" {{ ($scope ?? 'request') === 'approval' ? 'selected' : '' }}>Approvals</option>
                     <option value="reports" {{ ($scope ?? 'request') === 'reports' ? 'selected' : '' }}>Reports</option>
                     <option value="all" {{ ($scope ?? 'request') === 'all' ? 'selected' : '' }}>All</option>
                 </select>
@@ -51,6 +54,8 @@
             <div class="small text-muted">
                 <span class="badge text-bg-primary me-1">report.*</span>
                 <span class="badge text-bg-success me-1">approval.*</span>
+                <span class="badge text-bg-info me-1">form.*</span>
+                <span class="badge text-bg-warning me-1">auth.*</span>
                 <span class="badge text-bg-secondary">Other</span>
             </div>
         </div>
@@ -71,7 +76,11 @@
                     @php($badgeClass =
                         str_starts_with($action, 'report.') ? 'text-bg-primary' :
                         (str_starts_with($action, 'approval.') ? 'text-bg-success' :
-                            (str_starts_with($action, 'account.') ? 'text-bg-secondary' : 'text-bg-dark')
+                            (str_starts_with($action, 'form.') ? 'text-bg-info' :
+                                (str_starts_with($action, 'auth.') ? 'text-bg-warning' :
+                                    (str_starts_with($action, 'account.') ? 'text-bg-secondary' : 'text-bg-dark')
+                                )
+                            )
                         )
                     )
                     <tr>

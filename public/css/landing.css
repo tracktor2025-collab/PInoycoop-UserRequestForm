@@ -127,6 +127,17 @@
     max-width: 1120px;
 }
 
+.landing-brand {
+    line-height: 0;
+}
+
+.landing-logo {
+    display: block;
+    max-width: min(100%, 280px);
+    height: auto;
+    object-fit: contain;
+}
+
 .landing-title {
     font-size: 2.4rem;
     font-weight: 700;

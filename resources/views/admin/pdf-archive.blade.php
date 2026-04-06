@@ -118,11 +118,12 @@
             <table class="table align-middle">
                 <thead>
                 <tr>
-                    <th>Request #</th>
-                    <th>Requester</th>
-                    <th>Sub Module(s)</th>
-                    <th>Status</th>
-                    <th>Backup PDF</th>
+                    <x-admin.sort-th column="request_number" label="Request #" :sort="$sort" :direction="$direction" />
+                    <x-admin.sort-th column="full_name" label="Requester" :sort="$sort" :direction="$direction" />
+                    <x-admin.sort-th column="systems" label="Sub Module(s)" :sort="$sort" :direction="$direction" />
+                    <x-admin.sort-th column="status" label="Status" :sort="$sort" :direction="$direction" />
+                    <th scope="col">Form</th>
+                    <th scope="col">Backup PDF</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -136,12 +137,19 @@
                         <td>{{ implode(', ', $item->systems ?? []) ?: '-' }}</td>
                         <td><span class="badge text-bg-{{ $item->status === 'approved' ? 'success' : ($item->status === 'rejected' ? 'danger' : 'warning') }}">{{ ucfirst($item->status) }}</span></td>
                         <td>
+                            <div class="d-flex flex-wrap gap-1 align-items-center">
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.request.summary', $item) }}" target="_blank" rel="noopener">View form</a>
+                                <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.request.edit', $item) }}">Edit</a>
+                                <x-admin.delete-request-form :access-request="$item" />
+                            </div>
+                        </td>
+                        <td>
                             <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.pdf.download', $item) }}">Download PDF</a>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center text-muted">No backup PDFs found.</td>
+                        <td colspan="6" class="text-center text-muted">No backup PDFs found.</td>
                     </tr>
                 @endforelse
                 </tbody>

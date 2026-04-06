@@ -14,7 +14,7 @@
                 <h2 class="h6 text-uppercase text-muted mb-2" style="letter-spacing: 0.04em;">History</h2>
                 <h3 class="h5 mb-2">Audit Trail (History Log)</h3>
                 <p class="text-muted small mb-3">
-                    Review who changed what—approval actions, account updates, and other recorded admin events.
+                    Review who changed what approval actions, account updates, and other recorded admin events.
                 </p>
                 <a href="{{ route('admin.system.audit') }}" class="btn btn-primary btn-sm">Open Audit Trail</a>
             </div>
@@ -73,7 +73,7 @@
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
             <div>
                 <h2 class="h5 mb-1">Reports</h2>
-                <div class="text-muted small">Generate a summary report using date range, system, and status filters.</div>
+                <div class="text-muted small">Generate a summary report for a day, a full month, or a full year then filter by system and status.</div>
             </div>
             <div class="text-end">
                 <button
@@ -99,25 +99,49 @@
 
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Start Date</label>
+                        <div class="col-12">
+                            <label class="form-label">Report period</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <label class="form-check-label">
+                                    <input type="radio" name="report-period" class="form-check-input" value="daily">
+                                    Daily
+                                </label>
+                                <label class="form-check-label">
+                                    <input type="radio" name="report-period" class="form-check-input" value="monthly" checked>
+                                    Monthly
+                                </label>
+                                <label class="form-check-label">
+                                    <input type="radio" name="report-period" class="form-check-input" value="yearly">
+                                    Yearly
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 report-period-panel d-none" data-report-period="daily">
+                            <label class="form-label" for="report-period-day">Day</label>
                             <input
                                 type="date"
                                 class="form-control"
-                                id="report-start-date"
-                                name="start_date"
-                                value="{{ $defaultReportStartDate }}"
+                                id="report-period-day"
+                                value="{{ $defaultReportDay }}"
                             >
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">End Date</label>
+                        <div class="col-md-6 report-period-panel" data-report-period="monthly">
+                            <label class="form-label" for="report-period-month">Month</label>
                             <input
-                                type="date"
+                                type="month"
                                 class="form-control"
-                                id="report-end-date"
-                                name="end_date"
-                                value="{{ $defaultReportEndDate }}"
+                                id="report-period-month"
+                                value="{{ $defaultReportMonth }}"
                             >
+                        </div>
+                        <div class="col-md-6 report-period-panel d-none" data-report-period="yearly">
+                            <label class="form-label" for="report-period-year">Year</label>
+                            <select id="report-period-year" class="form-select">
+                                @foreach($yearOptions as $y)
+                                    <option value="{{ $y }}" {{ (int) $y === (int) now()->year ? 'selected' : '' }}>{{ $y }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div class="col-md-6">
@@ -313,6 +337,61 @@
 
             var currentPieChart = null;
 
+            function pad2(n) {
+                return String(n).padStart(2, '0');
+            }
+
+            function toggleReportPeriodPanels() {
+                var checked = document.querySelector('input[name="report-period"]:checked');
+                var mode = checked ? checked.value : 'monthly';
+                document.querySelectorAll('.report-period-panel').forEach(function (el) {
+                    if (el.getAttribute('data-report-period') === mode) {
+                        el.classList.remove('d-none');
+                    } else {
+                        el.classList.add('d-none');
+                    }
+                });
+            }
+
+            document.querySelectorAll('input[name="report-period"]').forEach(function (radio) {
+                radio.addEventListener('change', toggleReportPeriodPanels);
+            });
+            toggleReportPeriodPanels();
+
+            function computeReportRange() {
+                var modeEl = document.querySelector('input[name="report-period"]:checked');
+                var mode = modeEl ? modeEl.value : 'monthly';
+                if (mode === 'daily') {
+                    var d = document.getElementById('report-period-day').value;
+                    return { start: d, end: d };
+                }
+                if (mode === 'monthly') {
+                    var mv = document.getElementById('report-period-month').value;
+                    if (!mv || mv.indexOf('-') < 0) {
+                        return { start: '', end: '' };
+                    }
+                    var parts = mv.split('-');
+                    var y = parseInt(parts[0], 10);
+                    var m = parseInt(parts[1], 10);
+                    if (!y || !m) {
+                        return { start: '', end: '' };
+                    }
+                    var dim = new Date(y, m, 0).getDate();
+                    var start = y + '-' + pad2(m) + '-01';
+                    var end = y + '-' + pad2(m) + '-' + pad2(dim);
+                    return { start: start, end: end };
+                }
+                if (mode === 'yearly') {
+                    var ySel = document.getElementById('report-period-year');
+                    var y = ySel ? parseInt(ySel.value, 10) : NaN;
+                    if (!y) {
+                        return { start: '', end: '' };
+                    }
+                    return { start: y + '-01-01', end: y + '-12-31' };
+                }
+                return { start: '', end: '' };
+            }
+
             function setError(msg) {
                 if (!msg) {
                     errorEl.textContent = '';
@@ -431,7 +510,15 @@
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(16);
                 // Keep title on the first header line.
-                doc.text('Access Request Monthly Summary', pageWidth / 2, 28, { align: 'center' });
+                var rp = String(report.reportPeriod || 'custom_range');
+                var titleByPeriod = {
+                    daily: 'Access Request Daily Summary',
+                    monthly: 'Access Request Monthly Summary',
+                    yearly: 'Access Request Yearly Summary',
+                    custom_range: 'Access Request Summary'
+                };
+                var docTitle = titleByPeriod[rp] || titleByPeriod.custom_range;
+                doc.text(docTitle, pageWidth / 2, 28, { align: 'center' });
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
                 doc.text('LOGO', 40, 28);
@@ -525,7 +612,13 @@
                     doc.text(timestamp, pageWidth / 2, pageHeight - 8, { align: 'center' });
                 }
 
-                doc.save('AccessRequestMonthlySummary_Report.pdf');
+                var pdfNameByPeriod = {
+                    daily: 'AccessRequestDailySummary_Report.pdf',
+                    monthly: 'AccessRequestMonthlySummary_Report.pdf',
+                    yearly: 'AccessRequestYearlySummary_Report.pdf',
+                    custom_range: 'AccessRequestSummary_Report.pdf'
+                };
+                doc.save(pdfNameByPeriod[rp] || pdfNameByPeriod.custom_range);
             }
 
             function generateExcel(report) {
@@ -547,7 +640,9 @@
                 var html = '';
                 html += '<html><head><meta charset="utf-8" /></head>';
                 html += '<body>';
-                html += '<h2 style="font-family:Arial;color:#4F46E5;">Access Request Report</h2>';
+                var rp = String(report.reportPeriod || 'custom_range');
+                var typeLabel = { daily: 'Daily', monthly: 'Monthly', yearly: 'Yearly', custom_range: 'Custom range' }[rp] || 'Summary';
+                html += '<h2 style="font-family:Arial;color:#4F46E5;">Access Request Report (' + esc(typeLabel) + ')</h2>';
                 html += '<div style="font-family:Arial;margin-bottom:12px;">';
                 html += '<b>Period:</b> ' + esc(period) + '<br />';
                 html += '<b>Total Requests:</b> ' + esc(summary.totalRequests || 0) + '<br />';
@@ -595,8 +690,9 @@
             generateBtn.addEventListener('click', async function () {
                 setError('');
 
-                var startDate = document.getElementById('report-start-date').value;
-                var endDate = document.getElementById('report-end-date').value;
+                var range = computeReportRange();
+                var startDate = range.start;
+                var endDate = range.end;
                 var system = document.getElementById('report-system').value;
 
                 var statuses = Array.prototype.slice.call(
@@ -606,7 +702,7 @@
                 var format = document.querySelector('input[name="report-format"]:checked').value;
 
                 if (!startDate || !endDate) {
-                    setError('Please select a valid date range.');
+                    setError('Please choose a valid report period (day, month, or year).');
                     return;
                 }
 

@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Middleware\EnsureAdminAuthenticated;
+use App\Http\Middleware\EnsureLandingCaptchaVerified;
+use App\Http\Middleware\EnsurePendingAdminTwoFactor;
+use App\Http\Middleware\EnsureStandardAdmin;
+use App\Http\Middleware\EnsureSuperAdmin;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,13 +18,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            \App\Http\Middleware\SecurityHeaders::class,
+            SecurityHeaders::class,
         ]);
 
         $middleware->alias([
-            'landing.captcha' => \App\Http\Middleware\EnsureLandingCaptchaVerified::class,
-            'admin.auth' => \App\Http\Middleware\EnsureAdminAuthenticated::class,
-            'admin.pending-2fa' => \App\Http\Middleware\EnsurePendingAdminTwoFactor::class,
+            'landing.captcha' => EnsureLandingCaptchaVerified::class,
+            'admin.auth' => EnsureAdminAuthenticated::class,
+            'admin.pending-2fa' => EnsurePendingAdminTwoFactor::class,
+            'admin.super' => EnsureSuperAdmin::class,
+            'admin.standard' => EnsureStandardAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

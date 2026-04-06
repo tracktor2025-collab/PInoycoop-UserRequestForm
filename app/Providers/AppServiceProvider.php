@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -36,10 +37,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Admin UI uses Bootstrap 5 only; Laravel's default Tailwind pagination breaks layout
+        // (unstyled responsive blocks, oversized SVG chevrons) when Tailwind is not loaded.
+        Paginator::useBootstrapFive();
+
         RateLimiter::for('admin-login', function (Request $request) {
             $email = (string) $request->input('email', '');
 
             return Limit::perMinute(12)->by($request->ip().'|'.$email);
+        });
+
+        RateLimiter::for('admin-password-reset', function (Request $request) {
+            $email = (string) $request->input('email', '');
+
+            return Limit::perMinute(6)->by($request->ip().'|'.$email);
         });
 
         RateLimiter::for('admin-two-factor', function (Request $request) {

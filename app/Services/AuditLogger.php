@@ -18,15 +18,22 @@ class AuditLogger
         ?string $subjectType = null,
         ?int $subjectId = null,
         array $metadata = [],
+        ?string $actorLabelOverride = null,
     ): void {
-        $id = (int) $request->session()->get('admin_id');
-        $admin = $id > 0 ? Admin::query()->find($id) : null;
-        $adminLabel = $admin !== null
-            ? trim((string) $admin->name).' <'.$admin->email.'>'
-            : 'Admin';
+        if ($actorLabelOverride !== null && $actorLabelOverride !== '') {
+            $adminLabel = $actorLabelOverride;
+            $adminId = null;
+        } else {
+            $id = (int) $request->session()->get('admin_id');
+            $admin = $id > 0 ? Admin::query()->find($id) : null;
+            $adminLabel = $admin !== null
+                ? trim((string) $admin->name).' <'.$admin->email.'>'
+                : 'System';
+            $adminId = $admin?->id;
+        }
 
         AuditLog::query()->create([
-            'admin_id' => $admin?->id,
+            'admin_id' => $adminId,
             'admin_label' => $adminLabel,
             'action' => $action,
             'description' => $description,

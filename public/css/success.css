@@ -20,7 +20,7 @@
 @media print {
     @page {
         size: A4 portrait;
-        margin: 10mm;
+        margin: 6mm;
     }
 
     html, body {
@@ -55,10 +55,10 @@
 
     .uarf-page {
         /* Fit cleanly within A4 portrait without shrinking */
-        width: 190mm !important;
+        width: 100% !important;
         margin: 0 auto !important;
-        padding: 4mm !important;
-        font-size: 0.8rem !important;
+        padding: 1mm !important;
+        font-size: 7.35pt !important;
     }
 
     .uarf-table th,
@@ -77,6 +77,42 @@
         text-align: center !important;
         vertical-align: middle !important;
     }
+
+    .uarf-paper-title { font-size: 1.55rem !important; }
+    .uarf-paper-logo-left,
+    .uarf-paper-logo-right {
+        max-height: 72px !important;
+    }
+
+    .uarf-paper-grid td,
+    .uarf-paper-two td,
+    .uarf-paper-four td { padding: 0.3rem 0.35rem !important; }
+    .uarf-paper-box,
+    .uarf-paper-full { padding: 0.3rem 0.35rem !important; margin-top: 0.35rem !important; }
+    .uarf-paper-val { margin-top: 0.15rem !important; }
+
+    /* Sheet 2 starts here so MASS-SPECC / Pinoy Coop logos print above PCDISS (MSP block kept together below). */
+    .uarf-paper-page-break {
+        page-break-before: always !important;
+        break-before: page !important;
+        margin-top: 0.25rem !important;
+    }
+
+    /* Keep MSP portal block together so row 3 is not orphaned on the next page */
+    .uarf-paper-full {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .uarf-paper-msp tr {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .uarf-paper-sign {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
 }
 
 /* Printable form layout */
@@ -84,6 +120,8 @@
     padding: 0.8rem 1rem;
     font-size: 0.8rem;
     background-color: #ffffff;
+    max-width: 840px;
+    margin: 0 auto;
 }
 
 .uarf-title {
@@ -98,6 +136,277 @@
 
 .uarf-note {
     color: #6b7280;
+    text-align: right;
+}
+
+/* New paper-style preview (match PDF layout) */
+
+.uarf-paper-body {
+    border: 1px solid #000;
+    padding: 0.25rem;
+}
+
+.uarf-paper-header {
+    text-align: center;
+}
+
+.uarf-paper-logos {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 86%;
+    margin: 0 auto;
+}
+
+.uarf-paper-logo-left {
+    max-height: 108px;
+    max-width: 45%;
+    object-fit: contain;
+}
+
+.uarf-paper-logo-right {
+    max-height: 84px;
+    max-width: 45%;
+    object-fit: contain;
+}
+
+.uarf-paper-title {
+    margin-top: 0.2rem;
+    font-family: "Times New Roman", serif;
+    font-size: 2.05rem;
+    font-weight: 600;
+    color: #1d3f6e;
+}
+
+.uarf-paper-rule {
+    border-top: 2px solid #8ea1c3;
+    margin: 0.25rem 0 0.35rem;
+}
+
+.uarf-paper-reqtype {
+    text-align: right;
+    font-size: 0.8rem;
+}
+
+.uarf-paper-note {
+    text-align: right;
+    font-style: italic;
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.uarf-paper-cb {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid #000;
+    margin-right: 0.25rem;
+    text-align: center;
+    line-height: 11px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.uarf-paper-cb-label {
+    display: inline-block;
+    margin-left: 0.65rem;
+    white-space: nowrap;
+}
+
+.uarf-paper-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.uarf-paper-reqno {
+    text-align: left;
+    min-width: 320px;
+    white-space: nowrap;
+}
+
+.uarf-paper-reqno-label {
+    font-family: "Times New Roman", serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.uarf-paper-reqno-value {
+    margin-left: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: "Times New Roman", serif;
+}
+
+.uarf-paper-grid,
+.uarf-paper-two,
+.uarf-paper-four,
+.uarf-paper-sign-grid {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.uarf-paper-grid td,
+.uarf-paper-two td,
+.uarf-paper-four td {
+    border: 1px solid #000;
+    padding: 0.45rem 0.5rem;
+    vertical-align: top;
+}
+
+.uarf-paper-label {
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.uarf-paper-hint {
+    font-weight: 400;
+    font-style: italic;
+    font-size: 0.75rem;
+}
+
+.uarf-paper-val {
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+}
+
+.uarf-paper-line {
+    border-bottom: 1px solid #666;
+    min-height: 0.95rem;
+    margin-top: 0.25rem;
+}
+
+.uarf-paper-box {
+    border: 1px solid #000;
+    padding: 0.45rem 0.5rem;
+    margin-top: 0.55rem;
+}
+
+.uarf-paper-box-title {
+    font-weight: 700;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.uarf-paper-systems {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.uarf-paper-systems td {
+    border: none;
+    padding: 0.1rem 0.5rem 0.1rem 0;
+    width: 33.33%;
+    vertical-align: top;
+    font-size: 0.8rem;
+}
+
+.uarf-paper-mini {
+    font-size: 0.78rem;
+}
+
+.uarf-paper-full {
+    border: 1px solid #000;
+    border-top: none;
+    padding: 0.45rem 0.5rem;
+}
+
+.uarf-paper-full-bordered {
+    border-top: 1px solid #000;
+}
+
+.uarf-paper-msp {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.25rem;
+}
+
+.uarf-paper-msp td {
+    border: none;
+    padding: 0.15rem 0.5rem 0.15rem 0;
+    width: 33.33%;
+    vertical-align: top;
+}
+
+.uarf-paper-msp-right-shift {
+    padding-top: 0.15rem !important;
+}
+
+.uarf-paper-msp-line {
+    margin-top: 0.2rem;
+    white-space: nowrap;
+}
+
+.uarf-paper-inline-line {
+    display: inline-block;
+    min-width: 140px;
+    border-bottom: 1px solid #666;
+    min-height: 0.9rem;
+    vertical-align: middle;
+}
+
+.uarf-paper-inline-line--cic {
+    line-height: 1.35;
+    min-height: 1.05rem;
+    max-width: 100%;
+    word-break: break-word;
+    vertical-align: bottom;
+}
+
+.uarf-paper-sign {
+    margin-top: 0.55rem;
+}
+
+.uarf-paper-sign-head {
+    border-bottom: 1px solid #000;
+    padding: 0.2rem 0.15rem;
+    font-weight: 700;
+    font-size: 0.78rem;
+}
+
+.uarf-paper-sign-body {
+    border: 1px solid #000;
+    border-top: none;
+}
+
+.uarf-paper-sign-grid td {
+    border-right: 1px solid #000;
+    border-bottom: none;
+    padding: 0.35rem 0.5rem;
+    height: 4.6rem;
+    text-align: center;
+    vertical-align: bottom;
+    width: 33.33%;
+}
+
+.uarf-paper-sign-grid td:last-child {
+    border-right: none;
+}
+
+.uarf-paper-sign-line {
+    border-top: 1.5px solid #000;
+    margin: 0 0.35rem 0.45rem;
+}
+
+.uarf-paper-sign-cap {
+    font-size: 0.78rem;
+}
+
+.uarf-paper-page-break {
+    margin-top: 0.65rem;
+    /* Screen: visual “second sheet”; print overrides to auto (see @media print) */
+    page-break-before: always;
+}
+
+.uarf-paper-logos-second-page {
+    margin-bottom: 0.45rem;
 }
 
 .uarf-check-label {

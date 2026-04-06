@@ -2,10 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AccessRequestFormRequest;
+use App\Jobs\HandleAccessRequestSubmissionJob;
+use App\Mail\AccessRequestStatusUpdated;
 use App\Models\AccessRequest;
 use App\Models\Admin;
-use App\Mail\AccessRequestStatusUpdated;
+use App\Services\AccessRequestGoogleSheetsService;
+use App\Services\AccessRequestSummaryBuilder;
 use App\Services\AuditLogger;
+use App\Support\RequestNumberIssuer;
+use Barryvdh\DomPDF\PDF;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,13 +20,38 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Revolution\Google\Sheets\Facades\Sheets;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminAccessRequestController extends Controller
 {
+    /**
+     * @param  array<int, string>  $allowedColumns
+     * @return array{sort: string, direction: string}
+     */
+    private function normalizeAccessRequestSort(Request $request, array $allowedColumns, string $defaultColumn, string $defaultDirection): array
+    {
+        $sort = (string) $request->query('sort', $defaultColumn);
+        $direction = strtolower((string) $request->query('direction', $defaultDirection));
+        if (! in_array($sort, $allowedColumns, true)) {
+            $sort = $defaultColumn;
+        }
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = $defaultDirection;
+        }
+
+        return ['sort' => $sort, 'direction' => $direction];
+    }
+
+    private function applyAccessRequestSort(Builder $query, string $sort, string $direction): void
+    {
+        $query->orderBy($sort, $direction)->orderByDesc('id');
+    }
+
     private function apiSheetTitle(string $title): string
     {
         $escaped = str_replace("'", "''", trim($title));
-        return "'" . $escaped . "'";
+
+        return "'".$escaped."'";
     }
 
     private function columnLetter(int $index): string
@@ -28,9 +60,10 @@ class AdminAccessRequestController extends Controller
         $letters = '';
         while ($index > 0) {
             $index--;
-            $letters = chr(($index % 26) + 65) . $letters;
+            $letters = chr(($index % 26) + 65).$letters;
             $index = intdiv($index, 26);
         }
+
         return $letters;
     }
 
@@ -39,7 +72,7 @@ class AdminAccessRequestController extends Controller
         $spreadsheetId = (string) (config('google.spreadsheet_id') ?? env('GOOGLE_SPREADSHEET_ID', ''));
         $requestNumber = trim((string) ($accessRequest->request_number ?? ''));
 
-        if ($spreadsheetId === '' || $requestNumber === '' || ! class_exists(\Revolution\Google\Sheets\Facades\Sheets::class)) {
+        if ($spreadsheetId === '' || $requestNumber === '' || ! class_exists(Sheets::class)) {
             return;
         }
 
@@ -72,6 +105,7 @@ class AdminAccessRequestController extends Controller
                     ->all();
             } catch (\Throwable $e) {
                 report($e);
+
                 continue;
             }
 
@@ -148,6 +182,7 @@ class AdminAccessRequestController extends Controller
                     $col = $newColIndex;
                 } catch (\Throwable $e) {
                     report($e);
+
                     continue;
                 }
             }
@@ -216,10 +251,39 @@ class AdminAccessRequestController extends Controller
 
     public function loginForm(): View
     {
-        return view('admin.login');
+        return view('admin.login', [
+            'portal' => 'admin',
+            'formAction' => route('admin.login'),
+            'title' => 'Admin Dashboard Login',
+            'subtitle' => 'Sign in with your admin email and password.',
+            'switchUrl' => route('super.login.form'),
+            'switchLabel' => 'Login as Super Admin',
+        ]);
+    }
+
+    public function loginFormSuper(): View
+    {
+        return view('admin.login', [
+            'portal' => 'super',
+            'formAction' => route('super.login'),
+            'title' => 'Super Admin Dashboard Login',
+            'subtitle' => 'Sign in with your super admin email and password.',
+            'switchUrl' => route('admin.login.form'),
+            'switchLabel' => 'Login as Normal Admin',
+        ]);
     }
 
     public function login(Request $request): RedirectResponse
+    {
+        return $this->authenticateByPortal($request, 'admin');
+    }
+
+    public function loginSuper(Request $request): RedirectResponse
+    {
+        return $this->authenticateByPortal($request, 'super');
+    }
+
+    private function authenticateByPortal(Request $request, string $portal): RedirectResponse
     {
         $validated = $request->validate([
             'email' => ['required', 'string', 'email'],
@@ -232,14 +296,23 @@ class AdminAccessRequestController extends Controller
             return back()->withInput()->with('error', 'Invalid email or password.');
         }
 
+        if ($portal === 'admin' && $admin->isSuperAdmin()) {
+            return back()->withInput()->with('error', 'This account is a super admin. Please use the Super Admin login page.');
+        }
+        if ($portal === 'super' && ! $admin->isSuperAdmin()) {
+            return back()->withInput()->with('error', 'This account is not a super admin.');
+        }
+
         $request->session()->forget([
             'admin_authenticated',
             'admin_id',
             'pending_2fa_admin_id',
             'admin_totp_enrollment_secret',
+            'login_portal',
         ]);
         $request->session()->regenerate();
         $request->session()->put('pending_2fa_admin_id', $admin->id);
+        $request->session()->put('login_portal', $portal);
 
         if ($admin->hasEnabledTwoFactor()) {
             return redirect()->route('admin.two-factor.challenge');
@@ -255,6 +328,7 @@ class AdminAccessRequestController extends Controller
             'admin_id',
             'pending_2fa_admin_id',
             'admin_totp_enrollment_secret',
+            'login_portal',
         ]);
         // Invalidate the whole session so Back/Forward can't restore auth state.
         $request->session()->invalidate();
@@ -265,27 +339,36 @@ class AdminAccessRequestController extends Controller
 
     public function dashboard(Request $request): View
     {
+        return view('admin.dashboard', $this->dashboardViewData($request));
+    }
+
+    public function superDashboard(Request $request): View
+    {
+        return view('admin.super-dashboard', $this->dashboardViewData($request));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function dashboardViewData(Request $request): array
+    {
         $total = AccessRequest::count();
         $pending = AccessRequest::where('status', 'pending')->count();
         $approved = AccessRequest::where('status', 'approved')->count();
         $rejected = AccessRequest::where('status', 'rejected')->count();
         $search = trim((string) $request->query('search', ''));
+        $sortState = $this->normalizeAccessRequestSort(
+            $request,
+            ['request_number', 'full_name', 'systems', 'status', 'created_at'],
+            'created_at',
+            'desc'
+        );
+        $sort = $sortState['sort'];
+        $direction = $sortState['direction'];
 
         // Pie chart data: number of requests ("bookings") per system.
         // Each AccessRequest can include multiple systems (JSON array), so counts can exceed total requests.
-        $systemModules = [
-            'ATM Portal',
-            'SMS Portal',
-            'MSP-ISS Portal',
-            'MSP-ISS FTP',
-            'Helpdesk',
-            'PASS',
-            'CASH ONLINE',
-            'CORE 3.0',
-            'BIZMOTO PORTAL (Business Center)',
-            'PINOYCOOP PORTAL',
-            'MVM Portal',
-        ];
+        $systemModules = config('access_request.system_modules', []);
 
         $systemCounts = array_fill_keys($systemModules, 0);
         $unknownCounts = [];
@@ -343,17 +426,27 @@ class AdminAccessRequestController extends Controller
         $recent = AccessRequest::query()
             ->when($search !== '', function ($q) use ($search): void {
                 $q->where(function ($sub) use ($search): void {
-                    $sub->where('request_number', 'like', '%' . $search . '%')
-                        ->orWhere('full_name', 'like', '%' . $search . '%');
+                    $sub->where('request_number', 'like', '%'.$search.'%')
+                        ->orWhere('full_name', 'like', '%'.$search.'%');
                 });
             })
-            ->latest()
+            ->tap(function (Builder $q) use ($sort, $direction): void {
+                $this->applyAccessRequestSort($q, $sort, $direction);
+            })
             ->paginate(10)
             ->withQueryString();
 
-        return view(
-            'admin.dashboard',
-            compact('total', 'pending', 'approved', 'rejected', 'recent', 'search', 'pieLabels', 'pieValues')
+        return compact(
+            'total',
+            'pending',
+            'approved',
+            'rejected',
+            'recent',
+            'search',
+            'sort',
+            'direction',
+            'pieLabels',
+            'pieValues'
         );
     }
 
@@ -365,13 +458,24 @@ class AdminAccessRequestController extends Controller
             $status = 'pending';
         }
 
+        $sortState = $this->normalizeAccessRequestSort(
+            $request,
+            ['request_number', 'full_name', 'systems', 'status', 'created_at'],
+            'created_at',
+            'desc'
+        );
+        $sort = $sortState['sort'];
+        $direction = $sortState['direction'];
+
         $requests = AccessRequest::query()
             ->when($status !== 'all', fn ($q) => $q->where('status', $status))
-            ->latest()
+            ->tap(function (Builder $q) use ($sort, $direction): void {
+                $this->applyAccessRequestSort($q, $sort, $direction);
+            })
             ->paginate(12)
             ->withQueryString();
 
-        return view('admin.approvals', compact('requests', 'status'));
+        return view('admin.approvals', compact('requests', 'status', 'sort', 'direction'));
     }
 
     /**
@@ -425,7 +529,33 @@ class AdminAccessRequestController extends Controller
         $validated = $request->validate([
             'status' => ['required', 'string', 'in:approved,rejected,pending'],
             'approval_remarks' => ['nullable', 'string', 'max:1000'],
+            'approval_signed' => ['nullable', 'file', 'mimes:pdf,jpeg,jpg,png', 'max:5120'],
         ]);
+
+        $toApproved = $validated['status'] === 'approved';
+        $fromNonApproved = $accessRequest->status !== 'approved';
+        if ($toApproved && $fromNonApproved) {
+            $hasNewFile = $request->hasFile('approval_signed');
+            $existingPath = (string) ($accessRequest->approval_signed_path ?? '');
+            $hasExisting = $existingPath !== '' && Storage::disk('local')->exists($existingPath);
+            if (! $hasNewFile && ! $hasExisting) {
+                return back()
+                    ->withErrors(['approval_signed' => 'Upload a signed approval document (PDF or image) before approving.'])
+                    ->withInput();
+            }
+        }
+
+        if ($request->hasFile('approval_signed')) {
+            $newPath = $request->file('approval_signed')->store(
+                'approval-signatures/'.$accessRequest->id,
+                'local'
+            );
+            $oldPath = (string) ($accessRequest->approval_signed_path ?? '');
+            if ($oldPath !== '' && Storage::disk('local')->exists($oldPath)) {
+                Storage::disk('local')->delete($oldPath);
+            }
+            $accessRequest->approval_signed_path = $newPath;
+        }
 
         $actingAdmin = Admin::query()->find((int) $request->session()->get('admin_id'));
         $adminLabel = $actingAdmin !== null
@@ -442,9 +572,14 @@ class AdminAccessRequestController extends Controller
         );
 
         $ref = (string) ($accessRequest->request_number ?: '#'.$accessRequest->id);
+        $approvalAction = match ($validated['status']) {
+            'approved' => 'approval.approved',
+            'rejected' => 'approval.rejected',
+            default => 'approval.pending',
+        };
         AuditLogger::log(
             $request,
-            'approval.updated',
+            $approvalAction,
             sprintf('Request %s: status changed from %s to %s.', $ref, $previousStatus, $validated['status']),
             AccessRequest::class,
             $accessRequest->id,
@@ -454,49 +589,339 @@ class AdminAccessRequestController extends Controller
         return back()->with('success', 'Request status updated successfully.');
     }
 
-    public function bulkApprove(Request $request): RedirectResponse
+    public function showRequestSummary(Request $request, AccessRequest $accessRequest): View
     {
-        $validated = $request->validate([
-            'ids' => ['required', 'array', 'min:1', 'max:5'],
-            'ids.*' => ['integer', 'exists:access_requests,id'],
-            'bulk_approval_remarks' => ['nullable', 'string', 'max:1000'],
+        $admin = Admin::query()->find((int) $request->session()->get('admin_id'));
+        $backUrl = ($admin !== null && $admin->isSuperAdmin())
+            ? route('super.dashboard')
+            : route('admin.dashboard');
+
+        $summary = is_array($accessRequest->summary) ? $accessRequest->summary : [];
+        if ($summary === []) {
+            $summary = $this->minimalSummaryFromAccessRequest($accessRequest);
+        }
+
+        $ref = (string) ($accessRequest->request_number ?: '#'.$accessRequest->id);
+        AuditLogger::log(
+            $request,
+            'form.viewed',
+            sprintf('Viewed access request form summary for %s.', $ref),
+            AccessRequest::class,
+            $accessRequest->id,
+            ['request_number' => $accessRequest->request_number],
+        );
+
+        return view('success', [
+            'summary' => $summary,
+            'adminPreview' => true,
+            'adminBackUrl' => $backUrl,
+            'accessRequestId' => $accessRequest->id,
+            'adminDeleteAccessRequest' => $accessRequest,
         ]);
+    }
 
-        $actingAdmin = Admin::query()->find((int) $request->session()->get('admin_id'));
-        $adminLabel = $actingAdmin !== null
-            ? trim($actingAdmin->name).' <'.$actingAdmin->email.'>'
-            : 'Admin';
+    public function destroyRequest(Request $request, AccessRequest $accessRequest): RedirectResponse
+    {
+        $ref = (string) ($accessRequest->request_number ?: '#'.$accessRequest->id);
 
-        $requests = AccessRequest::query()
-            ->whereIn('id', $validated['ids'])
-            ->where('status', 'pending')
-            ->orderByDesc('id')
-            ->get();
-
-        if ($requests->isEmpty()) {
-            return back()->with('error', 'No pending requests matched the selection.');
+        foreach (['approval_signed_path', 'pdf_path'] as $key) {
+            $path = (string) ($accessRequest->{$key} ?? '');
+            if ($path !== '' && Storage::disk('local')->exists($path)) {
+                Storage::disk('local')->delete($path);
+            }
         }
 
-        $remarks = $validated['bulk_approval_remarks'] ?? null;
-        foreach ($requests as $accessRequest) {
-            $this->finalizeAccessRequestDecision($accessRequest, 'approved', $remarks, $adminLabel);
+        try {
+            app(AccessRequestGoogleSheetsService::class)->deleteRequestRows($accessRequest);
+        } catch (\Throwable $e) {
+            report($e);
         }
-
-        $numbers = $requests->map(fn (AccessRequest $r) => (string) ($r->request_number ?: '#'.$r->id))->implode(', ');
 
         AuditLogger::log(
             $request,
-            'approval.bulk_approved',
-            sprintf('Bulk approved %d request(s): %s', $requests->count(), $numbers),
-            null,
-            null,
-            [
-                'ids' => $requests->pluck('id')->values()->all(),
-                'count' => $requests->count(),
-            ],
+            'form.deleted',
+            sprintf('Deleted access request %s.', $ref),
+            AccessRequest::class,
+            $accessRequest->id,
+            ['request_number' => $accessRequest->request_number],
         );
 
-        return back()->with('success', $requests->count().' request(s) approved.');
+        $accessRequest->delete();
+
+        return redirect()->to($this->safeRedirectAfterDelete($request))
+            ->with('success', 'Access request deleted.');
+    }
+
+    private function safeRedirectAfterDelete(Request $request): string
+    {
+        $to = $request->input('redirect_to');
+        $base = rtrim((string) config('app.url'), '/');
+        if (is_string($to) && $to !== '' && ($base === '' || str_starts_with($to, $base))) {
+            return $to;
+        }
+
+        $admin = Admin::query()->find((int) $request->session()->get('admin_id'));
+        if ($admin !== null && $admin->isSuperAdmin()) {
+            return route('super.dashboard');
+        }
+
+        return route('admin.dashboard');
+    }
+
+    public function editRequestForm(Request $request, AccessRequest $accessRequest): View
+    {
+        $creatingNewFromApproved = $accessRequest->status === 'approved';
+        $requestNumberPreview = (string) ($accessRequest->request_number ?? '');
+
+        if ($creatingNewFromApproved) {
+            $sessionKey = 'admin_new_request_preview:'.$accessRequest->id;
+            $cached = $request->session()->get($sessionKey);
+            if (is_string($cached) && trim($cached) !== '') {
+                $requestNumberPreview = trim($cached);
+            } else {
+                $requestNumberPreview = RequestNumberIssuer::reserveNext();
+                $request->session()->put($sessionKey, $requestNumberPreview);
+            }
+        }
+
+        $admin = Admin::query()->find((int) $request->session()->get('admin_id'));
+        $adminCancelUrl = ($admin !== null && $admin->isSuperAdmin())
+            ? route('super.dashboard')
+            : route('admin.dashboard');
+
+        return view('user-request-form', [
+            'requestNumberPreview' => $requestNumberPreview,
+            'editPrefill' => $this->formPrefillFromAccessRequest($accessRequest),
+            'adminEdit' => true,
+            'adminEditAccessRequest' => $accessRequest,
+            'adminEditCreatesNew' => $creatingNewFromApproved,
+            'formAction' => route('admin.request.update', $accessRequest),
+            'adminCancelUrl' => $adminCancelUrl,
+            'adminEditBanner' => $creatingNewFromApproved
+                ? 'This request is approved. Saving creates a new pending request with the request number shown below. The approved record will not be modified.'
+                : null,
+        ]);
+    }
+
+    public function updateRequest(AccessRequestFormRequest $request, AccessRequest $accessRequest): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        if (($validated['access_type'] ?? null) === 'Temporary' && empty($validated['access_end_date'])) {
+            return redirect()
+                ->route('admin.request.edit', $accessRequest)
+                ->withInput()
+                ->with('error', 'End Date is required for Temporary access.');
+        }
+
+        $systems = is_array($request->systems) ? array_values(array_filter($request->systems)) : [];
+
+        if ($accessRequest->status === 'approved') {
+            $request->session()->forget('admin_new_request_preview:'.$accessRequest->id);
+
+            $newNumber = trim((string) ($validated['resource_request_number'] ?? ''));
+            if ($newNumber === '' || ! RequestNumberIssuer::isValidIssuedFormat($newNumber)) {
+                $newNumber = RequestNumberIssuer::reserveNext();
+            }
+            $validated['request_number'] = $newNumber;
+
+            $summary = AccessRequestSummaryBuilder::fromValidated($request, $validated);
+
+            $new = AccessRequest::query()->create([
+                'source_request_id' => $accessRequest->id,
+                'request_number' => $newNumber,
+                'full_name' => $validated['full_name'],
+                'email' => $validated['email'] ?? null,
+                'mobile_no' => $validated['mobile_no'] ?? null,
+                'coop_name' => $validated['coop_name'] ?? null,
+                'branch' => $validated['branch'] ?? null,
+                'request_date' => $validated['request_date'] ?? null,
+                'status' => 'pending',
+                'systems' => $systems,
+                'summary' => $summary,
+            ]);
+
+            $jobPayload = array_merge($validated, [
+                'request_number' => $newNumber,
+                'systems' => $systems,
+            ]);
+            dispatch(new HandleAccessRequestSubmissionJob($jobPayload, now()->toDateTimeString()));
+
+            $refOld = (string) ($accessRequest->request_number ?: '#'.$accessRequest->id);
+            AuditLogger::log(
+                $request,
+                'form.created_from_approved',
+                sprintf('Created new pending request %s from approved request %s.', $newNumber, $refOld),
+                AccessRequest::class,
+                $new->id,
+                ['source_id' => $accessRequest->id, 'new_request_number' => $newNumber],
+            );
+
+            return redirect()
+                ->route('admin.request.summary', $new)
+                ->with('success', 'A new pending request was created from the approved record. The original approval was not changed.');
+        }
+
+        $validated['request_number'] = (string) ($accessRequest->request_number ?? '');
+        $summary = AccessRequestSummaryBuilder::fromValidated($request, $validated);
+
+        $before = [
+            'full_name' => $accessRequest->full_name,
+            'email' => $accessRequest->email,
+            'status' => $accessRequest->status,
+        ];
+
+        $accessRequest->fill([
+            'full_name' => $validated['full_name'],
+            'email' => $validated['email'] ?? null,
+            'mobile_no' => $validated['mobile_no'] ?? null,
+            'coop_name' => $validated['coop_name'] ?? null,
+            'branch' => $validated['branch'] ?? null,
+            'request_date' => $validated['request_date'] ?? null,
+            'systems' => $systems,
+            'summary' => $summary,
+        ]);
+        $accessRequest->save();
+
+        try {
+            $accessRequest->refresh();
+            $syncPayload = array_merge($validated, [
+                'request_number' => $accessRequest->request_number,
+                'systems' => $systems,
+            ]);
+            app(AccessRequestGoogleSheetsService::class)->updateRequestRows(
+                $accessRequest,
+                $syncPayload,
+                now()->toDateTimeString(),
+            );
+            $this->syncStatusToGoogleSheets($accessRequest);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        $ref = (string) ($accessRequest->request_number ?: '#'.$accessRequest->id);
+        AuditLogger::log(
+            $request,
+            'form.updated',
+            sprintf('Updated access request %s.', $ref),
+            AccessRequest::class,
+            $accessRequest->id,
+            ['before' => $before, 'request_number' => $accessRequest->request_number],
+        );
+
+        return redirect()
+            ->route('admin.request.summary', $accessRequest)
+            ->with('success', 'Request saved and Google Sheet rows updated where the request number was found.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formPrefillFromAccessRequest(AccessRequest $ar): array
+    {
+        $s = is_array($ar->summary) ? $ar->summary : [];
+        $g = static fn (string $k): string => trim((string) ($s[$k] ?? ''));
+        $list = static function (string $v): array {
+            $v = trim($v);
+            if ($v === '' || $v === '-') {
+                return [];
+            }
+
+            return array_values(array_filter(array_map('trim', explode(',', $v))));
+        };
+
+        $reqTypeStr = $g('Request Type');
+        $requestType = $reqTypeStr === '' ? [] : array_values(array_filter(array_map('trim', explode(',', $reqTypeStr))));
+
+        $systems = is_array($ar->systems) ? $ar->systems : [];
+
+        $rd = $ar->request_date;
+        $requestDate = $rd !== null
+            ? $rd->format('Y-m-d')
+            : (($t = $g('Date of Request')) !== '-' && $t !== '' ? $t : date('Y-m-d'));
+
+        return [
+            'request_type' => $requestType,
+            'resource_request_number' => (string) ($ar->request_number ?? ''),
+            'full_name' => $ar->full_name ?: ($g('Full Name') !== '-' ? $g('Full Name') : ''),
+            'coop_name' => $ar->coop_name ?: ($g('Cooperative Name') !== '-' ? $g('Cooperative Name') : ''),
+            'branch' => $ar->branch ?: ($g('Branch') !== '-' ? $g('Branch') : ''),
+            'request_date' => $requestDate,
+            'mobile_no' => $ar->mobile_no ?: ($g('Mobile No') !== '-' ? $g('Mobile No') : ''),
+            'address' => $g('Address') !== '-' ? $g('Address') : '',
+            'postal_code' => $g('Postal Code') !== '-' ? $g('Postal Code') : '',
+            'gender' => $g('Gender') !== '-' ? $g('Gender') : '',
+            'place_of_birth' => $g('Place of Birth') !== '-' ? $g('Place of Birth') : '',
+            'email' => $ar->email ?: ($g('Email Address') !== '-' ? $g('Email Address') : ''),
+            'systems' => $systems,
+            'access_type' => $g('Access Type') !== '-' ? $g('Access Type') : '',
+            'access_end_date' => $g('Access End Date') !== '-' ? $g('Access End Date') : '',
+            'job_title' => $g('Job Title / Designation') !== '-' ? $g('Job Title / Designation') : '',
+            'mvm_roles' => $list($g('MVM Roles')),
+            'core_roles' => $list($g('Core 3.0 Roles')),
+            'atm_access' => $list($g('ATM Access Level')),
+            'msp_coop_code' => $g('MSP Coop Code (MBWIN)') !== '-' ? $g('MSP Coop Code (MBWIN)') : '',
+            'msp_username' => $g('MSP User Name (CIC)') !== '-' ? $g('MSP User Name (CIC)') : '',
+            'msp_submission_type' => $g('MSP Submission Type') !== '-' ? $g('MSP Submission Type') : '',
+            'msp_end_date' => $g('MSP End Date') !== '-' ? $g('MSP End Date') : '',
+            'ftp_allowed' => $g('FTP Allowed') !== '-' ? $g('FTP Allowed') : '',
+            'ftp_provider_code' => $g('FTP Provider Code (CIC)') !== '-' ? $g('FTP Provider Code (CIC)') : '',
+            'ftp_password_cic' => $g('FTP Password (CIC)') !== '-' ? $g('FTP Password (CIC)') : '',
+            'ftp_roles' => $list($g('FTP User Roles')),
+            'pcdiss_provider_code' => $g('PCDISS Provider Code (CIC)') !== '-' ? $g('PCDISS Provider Code (CIC)') : '',
+            'pcdiss_username' => $g('PCDISS Username (CIC)') !== '-' ? $g('PCDISS Username (CIC)') : '',
+            'pcdiss_password_cic' => $g('PCDISS Password (CIC)') !== '-' ? $g('PCDISS Password (CIC)') : '',
+            'pcdiss_submission_type' => $g('PCDISS Submission Type') !== '-' ? $g('PCDISS Submission Type') : '',
+            'pcdiss_roles' => $list($g('PCDISS User Roles')),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function minimalSummaryFromAccessRequest(AccessRequest $accessRequest): array
+    {
+        $systems = is_array($accessRequest->systems)
+            ? implode(', ', array_filter(array_map('strval', $accessRequest->systems)))
+            : '';
+
+        return [
+            'Request Number' => (string) ($accessRequest->request_number ?: '-'),
+            'Request Type' => '-',
+            'Full Name' => (string) ($accessRequest->full_name ?? '-'),
+            'Cooperative Name' => (string) ($accessRequest->coop_name ?? '-'),
+            'Branch' => (string) ($accessRequest->branch ?? '-'),
+            'Date of Request' => $accessRequest->request_date?->format('Y-m-d') ?? '-',
+            'Mobile No' => (string) ($accessRequest->mobile_no ?? '-'),
+            'Address' => '-',
+            'Postal Code' => '-',
+            'Email Address' => (string) ($accessRequest->email ?? '-'),
+            'Place of Birth' => '-',
+            'Gender' => '-',
+            'Systems Requested' => $systems !== '' ? $systems : '-',
+            'Access Type' => '-',
+            'Access End Date' => '-',
+            'Job Title / Designation' => '-',
+        ];
+    }
+
+    public function downloadApprovalSigned(Request $request, AccessRequest $accessRequest): StreamedResponse
+    {
+        $path = (string) ($accessRequest->approval_signed_path ?? '');
+        if ($path === '' || ! Storage::disk('local')->exists($path)) {
+            abort(404, 'Signed approval file not found.');
+        }
+
+        $ref = (string) ($accessRequest->request_number ?: '#'.$accessRequest->id);
+        AuditLogger::log(
+            $request,
+            'form.approval_file.downloaded',
+            sprintf('Downloaded signed approval file for request %s.', $ref),
+            AccessRequest::class,
+            $accessRequest->id,
+        );
+
+        return Storage::disk('local')->download($path);
     }
 
     public function pdfArchive(Request $request): View
@@ -505,19 +930,16 @@ class AdminAccessRequestController extends Controller
         $status = trim((string) $request->query('status', 'all'));
         $search = trim((string) $request->query('search', ''));
 
-        $systemModules = [
-            'ATM Portal',
-            'SMS Portal',
-            'MSP-ISS Portal',
-            'MSP-ISS FTP',
-            'Helpdesk',
-            'PASS',
-            'CASH ONLINE',
-            'CORE 3.0',
-            'BIZMOTO PORTAL (Business Center)',
-            'PINOYCOOP PORTAL',
-            'MVM Portal',
-        ];
+        $systemModules = config('access_request.system_modules', []);
+
+        $sortState = $this->normalizeAccessRequestSort(
+            $request,
+            ['request_number', 'full_name', 'systems', 'status', 'created_at'],
+            'created_at',
+            'desc'
+        );
+        $sort = $sortState['sort'];
+        $direction = $sortState['direction'];
 
         $requests = AccessRequest::query()
             ->where(function ($q): void {
@@ -531,29 +953,40 @@ class AdminAccessRequestController extends Controller
             ->when($system !== 'all', fn ($q) => $q->whereJsonContains('systems', $system))
             ->when($search !== '', function ($q) use ($search): void {
                 $q->where(function ($sub) use ($search): void {
-                    $sub->where('request_number', 'like', '%' . $search . '%')
-                        ->orWhere('full_name', 'like', '%' . $search . '%')
-                        ->orWhere('email', 'like', '%' . $search . '%');
+                    $sub->where('request_number', 'like', '%'.$search.'%')
+                        ->orWhere('full_name', 'like', '%'.$search.'%')
+                        ->orWhere('email', 'like', '%'.$search.'%');
                 });
             })
-            ->latest()
+            ->tap(function (Builder $q) use ($sort, $direction): void {
+                $this->applyAccessRequestSort($q, $sort, $direction);
+            })
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.pdf-archive', compact('requests', 'systemModules', 'system', 'status', 'search'));
+        return view('admin.pdf-archive', compact('requests', 'systemModules', 'system', 'status', 'search', 'sort', 'direction'));
     }
 
-    public function downloadPdf(AccessRequest $accessRequest)
+    public function downloadPdf(Request $request, AccessRequest $accessRequest)
     {
+        $ref = (string) ($accessRequest->request_number ?: '#'.$accessRequest->id);
+        AuditLogger::log(
+            $request,
+            'form.pdf.downloaded',
+            sprintf('Downloaded PDF backup for request %s.', $ref),
+            AccessRequest::class,
+            $accessRequest->id,
+        );
+
         $summary = is_array($accessRequest->summary) ? $accessRequest->summary : [];
         $baseName = (string) ($accessRequest->request_number ?: $accessRequest->id ?: 'request');
         $safeBaseName = preg_replace('/[^A-Za-z0-9\-]/', '-', $baseName) ?: 'request';
-        $filename = 'access-request-' . $safeBaseName . '.pdf';
+        $filename = 'access-request-'.$safeBaseName.'.pdf';
 
         // Regenerate from current template so admin downloads always use latest PDF layout.
         if (! empty($summary)) {
             try {
-                /** @var \Barryvdh\DomPDF\PDF $pdf */
+                /** @var PDF $pdf */
                 $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('success-pdf', [
                     'summary' => $summary,
                 ])->setPaper('a4', 'portrait');

@@ -11,16 +11,20 @@ class EnsurePendingAdminTwoFactor
 {
     public function handle(Request $request, Closure $next): Response
     {
+        $loginRoute = (string) $request->session()->get('login_portal') === 'super'
+            ? 'super.login.form'
+            : 'admin.login.form';
+
         $id = $request->session()->get('pending_2fa_admin_id');
         if (! is_numeric($id) || (int) $id < 1) {
-            return redirect()->route('admin.login.form')
+            return redirect()->route($loginRoute)
                 ->with('error', 'Please sign in to continue.');
         }
 
         if (! Admin::query()->whereKey((int) $id)->exists()) {
             $request->session()->forget(['pending_2fa_admin_id', 'admin_totp_enrollment_secret']);
 
-            return redirect()->route('admin.login.form')
+            return redirect()->route($loginRoute)
                 ->with('error', 'Your session expired. Please sign in again.');
         }
 
