@@ -10,19 +10,61 @@
             min-height: 100vh;
             display: grid;
             place-items: center;
-            background: linear-gradient(135deg, #1f2937, #1d4ed8);
+            background: radial-gradient(circle at top left, #e0edff 0, #f7f9ff 42%, #ffffff 100%);
+            color: #0f172a;
+            padding: 1.5rem;
         }
         .login-card {
             width: min(420px, 92vw);
             border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(10px);
+        }
+        .login-brand {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+        .login-logo {
+            width: min(100%, 320px);
+            height: auto;
+            display: block;
+            object-fit: contain;
+        }
+        .login-kicker {
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1d4ed8;
+            text-align: center;
+        }
+        .login-title {
+            text-align: center;
+            margin-bottom: 0.25rem;
+        }
+        .login-subtitle {
+            text-align: center;
+            margin-bottom: 1.25rem;
         }
     </style>
 </head>
 <body>
 <div class="card login-card shadow">
     <div class="card-body p-4">
-        <h1 class="h4 mb-1">Set new password</h1>
-        <p class="text-muted mb-4">Choose a new password. After saving, sign in as usual; two-factor authentication is unchanged.</p>
+        <div class="login-brand">
+            <img
+                src="{{ asset('MASS-SPECC Logo/MASS-SPECC Logo.png') }}"
+                alt="MASS-SPECC Cooperative Development Center"
+                class="login-logo"
+                decoding="async"
+                loading="lazy"
+            >
+        </div>
+        <div class="login-kicker">MASS-SPECC Cooperative Development Center</div>
+        <h1 class="h4 login-title">Set new password</h1>
+        <p class="text-muted login-subtitle">Create a new password for your admin account.</p>
 
         @if($errors->any())
             <div class="alert alert-danger">{{ $errors->first() }}</div>

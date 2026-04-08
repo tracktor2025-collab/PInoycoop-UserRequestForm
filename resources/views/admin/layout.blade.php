@@ -24,6 +24,41 @@
             color: #fff;
             text-decoration: none;
             font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            line-height: 1;
+        }
+        .navbar-logo-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            border-radius: 12px;
+            padding: 6px 10px;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+        }
+        .navbar-logo-img {
+            height: 46px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            filter: none;
+        }
+        .navbar-logo-text {
+            display: inline-flex;
+            flex-direction: column;
+            line-height: 1.05;
+        }
+        .navbar-logo-text .title {
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+        .navbar-logo-text .subtitle {
+            font-weight: 600;
+            font-size: 0.75rem;
+            opacity: 0.85;
         }
         .navbar-mainbg {
             background-color: #5161ce;
@@ -254,7 +289,19 @@
     <div class="nav-inner">
         <nav class="navbar navbar-expand-lg navbar-mainbg">
             <a class="navbar-brand navbar-logo" href="{{ $isSuperAdmin ? route('admin.super.dashboard') : route('admin.dashboard') }}">
-                {{ $isSuperAdmin ? 'Access Request Super Admin' : 'Access Request Admin' }}
+                <span class="navbar-logo-badge">
+                    <img
+                        src="{{ asset('MASS-SPECC Logo/MASS-SPECC Logo.png') }}"
+                        alt="MASS-SPECC"
+                        class="navbar-logo-img"
+                        decoding="async"
+                        loading="lazy"
+                    >
+                </span>
+                <span class="navbar-logo-text">
+                    <span class="title">{{ $isSuperAdmin ? 'Access Request Super Admin' : 'Access Request Admin' }}</span>
+                    <span class="subtitle">MASS-SPECC Cooperative</span>
+                </span>
             </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <i class="bi bi-list text-white"></i>
