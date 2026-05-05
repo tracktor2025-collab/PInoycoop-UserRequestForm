@@ -12,6 +12,7 @@ use Barryvdh\DomPDF\PDF;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -33,6 +34,13 @@ class UserAccessRequestController extends Controller
     public function landing(): View
     {
         return view('landing');
+    }
+
+    public function captchaPage(): View
+    {
+        request()->session()->forget('landing_captcha_verified');
+
+        return view('request-captcha');
     }
 
     public function form(): View
@@ -122,24 +130,34 @@ class UserAccessRequestController extends Controller
                 'systems' => $systems,
                 'summary' => $summary,
             ]);
-
-            $actor = 'Public user';
-            $email = trim((string) ($validated['email'] ?? ''));
-            if ($email !== '') {
-                $actor = 'Public user <'.$email.'>';
-            }
-            AuditLogger::log(
-                $request,
-                'form.submitted',
-                sprintf('Submitted access request %s.', (string) ($validated['request_number'] ?? '')),
-                AccessRequest::class,
-                $accessRequest->id,
-                ['request_number' => $validated['request_number'] ?? ''],
-                $actor,
-            );
         } catch (\Throwable $e) {
+            Log::error('Access request could not be saved to the admin database.', [
+                'request_number' => (string) ($validated['request_number'] ?? ''),
+                'email' => (string) ($validated['email'] ?? ''),
+                'message' => $e->getMessage(),
+            ]);
             report($e);
+
+            return redirect()
+                ->route('request.form')
+                ->withInput()
+                ->with('error', 'We could not save your request. Please try again or contact support.');
         }
+
+        $actor = 'Public user';
+        $email = trim((string) ($validated['email'] ?? ''));
+        if ($email !== '') {
+            $actor = 'Public user <'.$email.'>';
+        }
+        AuditLogger::log(
+            $request,
+            'form.submitted',
+            sprintf('Submitted access request %s.', (string) ($validated['request_number'] ?? '')),
+            AccessRequest::class,
+            $accessRequest->id,
+            ['request_number' => $validated['request_number'] ?? ''],
+            $actor,
+        );
 
         $request->session()->forget('request_number_preview');
 

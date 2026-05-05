@@ -16,8 +16,11 @@
 /public/build
 /public/hot
 /public/storage
+/public/PinooyCoopStaticWeb-main.zip
+/public/mass_specc_laravel.sql
 /storage/*.key
 /storage/pail
+/storage/tmp
 /vendor
 Homestead.json
 Homestead.yaml

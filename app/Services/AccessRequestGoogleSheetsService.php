@@ -101,39 +101,60 @@ class AccessRequestGoogleSheetsService
             );
 
             if ($existingHeader !== $expectedHeader) {
-                $sheetProps = Sheets::spreadsheet($spreadsheetId)
-                    ->sheet($this->apiSheetTitle($sheetName))
-                    ->sheetProperties();
+                $normalizedExisting = array_map(
+                    static fn ($cell) => mb_strtolower(trim((string) $cell)),
+                    $existingHeader
+                );
+                $normalizedExpected = array_map(
+                    static fn ($cell) => mb_strtolower(trim((string) $cell)),
+                    $expectedHeader
+                );
 
-                $sheetId = (int) ($sheetProps->sheetId ?? 0);
-                if ($sheetId > 0) {
-                    $service = Sheets::spreadsheet($spreadsheetId)->getService();
+                $canUpdateHeaderInPlace = $existingHeader === []
+                    || $normalizedExisting === array_slice($normalizedExpected, 0, \count($normalizedExisting));
 
-                    $body = new BatchUpdateSpreadsheetRequest([
-                        'requests' => [
-                            [
-                                'insertDimension' => [
-                                    'range' => [
-                                        'sheetId' => $sheetId,
-                                        'dimension' => 'ROWS',
-                                        'startIndex' => 0,
-                                        'endIndex' => 1,
+                if ($canUpdateHeaderInPlace) {
+                    Sheets::spreadsheet($spreadsheetId)
+                        ->sheet($this->apiSheetTitle($sheetName))
+                        ->range('A1')
+                        ->update([$headerRow]);
+
+                    $shouldAutoResize = true;
+                } else {
+                    $sheetProps = Sheets::spreadsheet($spreadsheetId)
+                        ->sheet($this->apiSheetTitle($sheetName))
+                        ->sheetProperties();
+
+                    $sheetId = (int) ($sheetProps->sheetId ?? 0);
+                    if ($sheetId > 0) {
+                        $service = Sheets::spreadsheet($spreadsheetId)->getService();
+
+                        $body = new BatchUpdateSpreadsheetRequest([
+                            'requests' => [
+                                [
+                                    'insertDimension' => [
+                                        'range' => [
+                                            'sheetId' => $sheetId,
+                                            'dimension' => 'ROWS',
+                                            'startIndex' => 0,
+                                            'endIndex' => 1,
+                                        ],
+                                        'inheritFromBefore' => false,
                                     ],
-                                    'inheritFromBefore' => false,
                                 ],
                             ],
-                        ],
-                    ]);
+                        ]);
 
-                    $service->spreadsheets->batchUpdate($spreadsheetId, $body);
+                        $service->spreadsheets->batchUpdate($spreadsheetId, $body);
+                    }
+
+                    Sheets::spreadsheet($spreadsheetId)
+                        ->sheet($this->apiSheetTitle($sheetName))
+                        ->range('A1')
+                        ->update([$headerRow]);
+
+                    $shouldAutoResize = true;
                 }
-
-                Sheets::spreadsheet($spreadsheetId)
-                    ->sheet($this->apiSheetTitle($sheetName))
-                    ->range('A1')
-                    ->update([$headerRow]);
-
-                $shouldAutoResize = true;
             }
 
             Cache::put($headerOkCacheKey, true, now()->addHours(12));
@@ -175,8 +196,59 @@ class AccessRequestGoogleSheetsService
         }
     }
 
-    private function buildSheetPayloadForSystem(string $system, array $validated, string $timestamp, ?string $statusLabel = null): array
+    /**
+     * @return array<int, string>
+     */
+    private function approvalMetadataHeaders(): array
     {
+        $headerConfig = (array) config('google.sheet_sync_approval_headers', []);
+
+        return [
+            (string) (($headerConfig['approved_by'][0] ?? null) ?: 'Approved By'),
+            (string) (($headerConfig['approved_at'][0] ?? null) ?: 'Approved At'),
+            (string) (($headerConfig['approval_remarks'][0] ?? null) ?: 'Approval Remarks'),
+        ];
+    }
+
+    /**
+     * @return array{header: array<int, string>, row: array<int, mixed>}
+     */
+    private function approvalMetadataValues(?AccessRequest $accessRequest = null): array
+    {
+        if ($accessRequest === null) {
+            return ['', '', ''];
+        }
+
+        $approvedAt = $accessRequest->approved_at;
+
+        return [
+            (string) ($accessRequest->approved_by ?? ''),
+            $approvedAt === null
+                ? ''
+                : $approvedAt->copy()->timezone((string) config('app.timezone', 'UTC'))->format('Y-m-d H:i'),
+            (string) ($accessRequest->approval_remarks ?? ''),
+        ];
+    }
+
+    /**
+     * @param  array<int, mixed>|null  $approvalValues
+     * @return array{header: array<int, string>, row: array<int, mixed>}
+     */
+    private function withStatusAndApprovalMetadata(array $header, array $row, string $statusCell, ?array $approvalValues = null): array
+    {
+        return [
+            'header' => array_merge($header, ['Status'], $this->approvalMetadataHeaders()),
+            'row' => array_merge($row, [$statusCell], $approvalValues ?? $this->approvalMetadataValues()),
+        ];
+    }
+
+    private function buildSheetPayloadForSystem(
+        string $system,
+        array $validated,
+        string $timestamp,
+        ?string $statusLabel = null,
+        ?array $approvalValues = null,
+    ): array {
         $statusCell = $statusLabel ?? 'Pending';
 
         $requestType = is_array($validated['request_type'] ?? null)
@@ -237,29 +309,35 @@ class AccessRequestGoogleSheetsService
         $system = trim($system);
 
         if ($system === 'CORE 3.0') {
-            return [
-                'header' => array_merge($commonHeader, ['Core Roles', 'Status']),
-                'row' => array_merge($commonRow, [$coreRoles, $statusCell]),
-            ];
+            return $this->withStatusAndApprovalMetadata(
+                array_merge($commonHeader, ['Core Roles']),
+                array_merge($commonRow, [$coreRoles]),
+                $statusCell,
+                $approvalValues
+            );
         }
 
         if ($system === 'ATM Portal') {
-            return [
-                'header' => array_merge($commonHeader, ['ATM Access', 'Status']),
-                'row' => array_merge($commonRow, [$atmAccess, $statusCell]),
-            ];
+            return $this->withStatusAndApprovalMetadata(
+                array_merge($commonHeader, ['ATM Access']),
+                array_merge($commonRow, [$atmAccess]),
+                $statusCell,
+                $approvalValues
+            );
         }
 
         if ($system === 'MVM Portal') {
-            return [
-                'header' => array_merge($commonHeader, ['MVM Roles', 'Status']),
-                'row' => array_merge($commonRow, [$mvmRoles, $statusCell]),
-            ];
+            return $this->withStatusAndApprovalMetadata(
+                array_merge($commonHeader, ['MVM Roles']),
+                array_merge($commonRow, [$mvmRoles]),
+                $statusCell,
+                $approvalValues
+            );
         }
 
         if ($system === 'MSP-ISS Portal') {
-            return [
-                'header' => array_merge($commonHeader, [
+            return $this->withStatusAndApprovalMetadata(
+                array_merge($commonHeader, [
                     'MSP Coop Code',
                     'MSP Username',
                     'MSP Submission Type',
@@ -267,9 +345,8 @@ class AccessRequestGoogleSheetsService
                     'Provider Code (CIC)',
                     'Password (CIC)',
                     'User Role',
-                    'Status',
                 ]),
-                'row' => array_merge($commonRow, [
+                array_merge($commonRow, [
                     $validated['msp_coop_code'] ?? '',
                     $validated['msp_username'] ?? '',
                     $validated['msp_submission_type'] ?? '',
@@ -277,63 +354,58 @@ class AccessRequestGoogleSheetsService
                     $validated['ftp_provider_code'] ?? '',
                     $validated['ftp_password_cic'] ?? '',
                     $ftpRoles,
-                    $statusCell,
                 ]),
-            ];
+                $statusCell,
+                $approvalValues
+            );
         }
 
         if ($system === 'MSP-ISS FTP') {
-            return [
-                'header' => array_merge($commonHeader, [
+            return $this->withStatusAndApprovalMetadata(
+                array_merge($commonHeader, [
                     'FTP Allowed',
                     'Provider Code (CIC)',
                     'Password (CIC)',
                     'FTP Roles',
-                    'Status',
                 ]),
-                'row' => array_merge($commonRow, [
+                array_merge($commonRow, [
                     $validated['ftp_allowed'] ?? '',
                     $validated['ftp_provider_code'] ?? '',
                     $validated['ftp_password_cic'] ?? '',
                     $ftpRoles,
-                    $statusCell,
                 ]),
-            ];
+                $statusCell,
+                $approvalValues
+            );
         }
 
         if ($system === 'PCDISS') {
-            return [
-                'header' => array_merge($commonHeader, [
+            return $this->withStatusAndApprovalMetadata(
+                array_merge($commonHeader, [
                     'Provider Code (CIC)',
                     'Username (CIC)',
                     'Password (CIC)',
                     'PCDISS Submission Type',
                     'PCDISS Roles',
-                    'Status',
                 ]),
-                'row' => array_merge($commonRow, [
+                array_merge($commonRow, [
                     $validated['pcdiss_provider_code'] ?? '',
                     $validated['pcdiss_username'] ?? '',
                     $validated['pcdiss_password_cic'] ?? '',
                     $validated['pcdiss_submission_type'] ?? '',
                     $pcdissRoles,
-                    $statusCell,
                 ]),
-            ];
+                $statusCell,
+                $approvalValues
+            );
         }
 
         if ($system === 'SSL VPN') {
-            return [
-                'header' => array_merge($commonHeader, ['Status']),
-                'row' => array_merge($commonRow, [$statusCell]),
-            ];
+            return $this->withStatusAndApprovalMetadata($commonHeader, $commonRow, $statusCell, $approvalValues);
         }
 
         // Systems without dedicated detail blocks (Helpdesk, PASS, SMS Portal, etc.)
-        return [
-            'header' => array_merge($commonHeader, ['Status']),
-            'row' => array_merge($commonRow, [$statusCell]),
-        ];
+        return $this->withStatusAndApprovalMetadata($commonHeader, $commonRow, $statusCell, $approvalValues);
     }
 
     public function submitToSheets(array $validated, string $timestamp): void
@@ -472,7 +544,13 @@ class AccessRequestGoogleSheetsService
                 $mainSystem = (string) ($systems[0] ?? '');
             }
 
-            $payload = $this->buildSheetPayloadForSystem($mainSystem, $validated, $timestamp, $statusLabel);
+            $payload = $this->buildSheetPayloadForSystem(
+                $mainSystem,
+                $validated,
+                $timestamp,
+                $statusLabel,
+                $this->approvalMetadataValues($accessRequest)
+            );
 
             try {
                 $quotedSheet = $this->apiSheetTitle($sheetName);

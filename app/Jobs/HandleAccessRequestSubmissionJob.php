@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class HandleAccessRequestSubmissionJob implements ShouldQueue
@@ -43,6 +44,11 @@ class HandleAccessRequestSubmissionJob implements ShouldQueue
         try {
             $sheetsService->submitToSheets($this->validated, $this->timestamp);
         } catch (\Throwable $e) {
+            Log::error('Google Sheets submission failed for access request.', [
+                'request_number' => (string) ($this->validated['request_number'] ?? ''),
+                'email' => (string) ($this->validated['email'] ?? ''),
+                'message' => $e->getMessage(),
+            ]);
             report($e);
         }
 
