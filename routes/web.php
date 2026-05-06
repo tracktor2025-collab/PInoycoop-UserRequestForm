@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [UserAccessRequestController::class, 'landing'])->name('landing');
 Route::view('/about', 'pinooycoop.pages.about')->name('pinooycoop.about');
 Route::view('/service', 'pinooycoop.pages.service')->name('pinooycoop.service');
+Route::view('/services-core', 'pinooycoop.pages.services-core')->name('pinooycoop.services-core');
+Route::view('/services-secure-estore', 'pinooycoop.pages.services-secure-estore')->name('pinooycoop.services-secure-estore');
+Route::view('/e-services', 'pinooycoop.pages.e-services')->name('pinooycoop.e-services');
 Route::get('/events', function () {
     return view('pinooycoop.pages.events', [
         'items' => Page::query()

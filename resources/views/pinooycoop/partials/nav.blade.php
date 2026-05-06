@@ -24,9 +24,9 @@
             PROGRAM & SERVICES <i class="fas fa-chevron-down"></i>
           </a>
           <ul class="dropdown-menu" aria-labelledby="navbarWelcome" >
-            <li><a class="dropdown-item" href="{{ route('landing') }}">Home</a></li>
-            <li><a class="dropdown-item" href="{{ route('pinooycoop.service') }}">Service</a></li>
-            <li><a class="dropdown-item" href="{{ route('pinooycoop.events') }}">Events</a></li>
+            <li><a class="dropdown-item" href="{{ route('pinooycoop.services-core') }}">Services Core</a></li>
+            <li><a class="dropdown-item" href="{{ route('pinooycoop.services-secure-estore') }}">Services Secure &amp; E-Store</a></li>
+            <li><a class="dropdown-item" href="{{ route('pinooycoop.e-services') }}">E-Services</a></li>
           </ul>
         </li>
         <li class="nav-item">
