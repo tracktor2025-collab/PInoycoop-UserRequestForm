@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Menu;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -69,6 +71,15 @@ class AppServiceProvider extends ServiceProvider
             $adminId = (string) $request->session()->get('admin_id', 'guest');
 
             return Limit::perMinute(120)->by($request->ip().'|'.$adminId);
+        });
+
+        View::composer('pinooycoop.partials.nav', function ($view) {
+            $view->with('primaryMenu', Menu::query()
+                ->where('location', 'primary')
+                ->where('is_active', true)
+                ->with(['activeItems.page', 'activeItems.activeChildren.page'])
+                ->latest()
+                ->first());
         });
     }
 }

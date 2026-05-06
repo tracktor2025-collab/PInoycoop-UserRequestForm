@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 430" role="img" aria-labelledby="title desc">
+  <title id="title">E-Services online banking</title>
+  <desc id="desc">An online banking and card services illustration with a payment card, ATM, mobile phone, and transfer arrows.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f9fbff"/>
+      <stop offset="0.5" stop-color="#dceeff"/>
+      <stop offset="1" stop-color="#c9f0e1"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f3d7c"/>
+      <stop offset="1" stop-color="#0aa9d6"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#143368" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="960" height="430" fill="url(#bg)"/>
+  <g opacity="0.22" fill="none" stroke="#1f3d7c" stroke-width="2">
+    <path d="M64 94h128l72 66h178"/>
+    <path d="M512 88h134l78 86h164"/>
+    <path d="M88 332h196l88-78h154"/>
+    <circle cx="192" cy="94" r="7" fill="#1f3d7c"/>
+    <circle cx="442" cy="160" r="7" fill="#1f3d7c"/>
+    <circle cx="646" cy="88" r="7" fill="#1f3d7c"/>
+    <circle cx="724" cy="174" r="7" fill="#1f3d7c"/>
+  </g>
+  <g transform="translate(94 106)" filter="url(#shadow)">
+    <rect width="326" height="194" rx="22" fill="url(#card)"/>
+    <rect x="30" y="42" width="64" height="42" rx="8" fill="#f8d66d"/>
+    <rect x="30" y="114" width="118" height="12" rx="6" fill="#f4fbff" opacity="0.9"/>
+    <rect x="30" y="144" width="188" height="12" rx="6" fill="#f4fbff" opacity="0.75"/>
+    <circle cx="244" cy="132" r="28" fill="#ffffff" opacity="0.92"/>
+    <circle cx="278" cy="132" r="28" fill="#ffffff" opacity="0.58"/>
+  </g>
+  <g transform="translate(472 56)" filter="url(#shadow)">
+    <rect width="188" height="318" rx="22" fill="#17326a"/>
+    <rect x="22" y="42" width="144" height="218" rx="12" fill="#ffffff"/>
+    <rect x="44" y="66" width="100" height="16" rx="8" fill="#1f3d7c"/>
+    <rect x="44" y="108" width="100" height="54" rx="12" fill="#e7f7ff"/>
+    <path d="M66 136h56M94 116v40" stroke="#0aa9d6" stroke-width="8" stroke-linecap="round"/>
+    <rect x="44" y="186" width="100" height="14" rx="7" fill="#d7e0ef"/>
+    <rect x="44" y="216" width="76" height="14" rx="7" fill="#d7e0ef"/>
+    <circle cx="94" cy="288" r="13" fill="#e7f7ff"/>
+  </g>
+  <g transform="translate(704 96)" filter="url(#shadow)">
+    <rect width="160" height="232" rx="16" fill="#1f3d7c"/>
+    <rect x="24" y="26" width="112" height="56" rx="8" fill="#eafcff"/>
+    <rect x="24" y="104" width="112" height="14" rx="7" fill="#eafcff" opacity="0.9"/>
+    <rect x="24" y="132" width="112" height="14" rx="7" fill="#eafcff" opacity="0.72"/>
+    <rect x="24" y="170" width="112" height="34" rx="8" fill="#0aa9d6"/>
+    <path d="M54 54h52M52 188h56" stroke="#1f3d7c" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g fill="none" stroke="#2ed17d" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M408 190c38-40 76-54 118-48"/>
+    <path d="m512 120 28 25-34 18"/>
+    <path d="M658 232c-38 36-77 48-120 40"/>
+    <path d="m552 294-29-24 34-20"/>
+  </g>
+  <g transform="translate(270 314)" filter="url(#shadow)">
+    <rect width="128" height="54" rx="12" fill="#2ed17d"/>
+    <path d="M28 27h72M66 14v26" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+  </g>
+</svg>

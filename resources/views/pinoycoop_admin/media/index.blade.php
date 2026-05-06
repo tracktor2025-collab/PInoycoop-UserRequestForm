@@ -7,6 +7,8 @@
         .preview-image { max-width:100%; max-height:300px; margin-bottom:1rem; border-radius:8px; box-shadow:0 4px 12px rgba(32,48,79,.1); }
         .file-item { position:relative; cursor:pointer; transition:transform .15s ease; }
         .file-item:hover { transform:scale(1.02); }
+        .media-thumb { width:72px; height:54px; border-radius:8px; object-fit:cover; background:#eef4f8; border:1px solid #dbe5ee; display:block; }
+        .media-file-icon { width:72px; height:54px; border-radius:8px; background:#eef4f8; border:1px solid #dbe5ee; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; color:#607993; }
         .stored-files-table { max-height:calc(6 * 60px + 45px); overflow-y:auto; border-radius:8px; }
         .stored-files-table table { width:100%; }
         .preview-trigger { display:inline-block; padding:.4rem .6rem; background:rgba(0,167,225,.1); color:var(--p); border-radius:6px; font-size:.85rem; font-weight:600; transition:all .15s ease; }
@@ -63,22 +65,35 @@
                         <tr>
                             <th>File</th>
                             <th>Path</th>
+                            <th>Size</th>
                             <th>Preview</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($files as $file)
+                            @php
+                                $isImage = str_starts_with((string) $file['mime'], 'image/');
+                                $size = (int) $file['size'];
+                                $sizeLabel = $size >= 1048576
+                                    ? number_format($size / 1048576, 2).' MB'
+                                    : number_format(max(1, $size) / 1024, 1).' KB';
+                            @endphp
                             <tr>
                                 <td>{{ $file['name'] }}</td>
                                 <td><code style="background:#f5f9fc; padding:.2rem .4rem; border-radius:4px; font-size:.85rem;">{{ $file['path'] }}</code></td>
+                                <td>{{ $sizeLabel }}</td>
                                 <td>
-                                    <div class="file-item" onclick="showPreview('{{ $file['url'] }}', '{{ $file['name'] }}')">
-                                        <span class="preview-trigger">Click to Preview</span>
+                                    <div class="file-item" onclick="showPreview({{ Illuminate\Support\Js::from($file['url']) }}, {{ Illuminate\Support\Js::from($file['name']) }}, {{ Illuminate\Support\Js::from($file['mime']) }})">
+                                        @if($isImage)
+                                            <img src="{{ $file['url'] }}" alt="{{ $file['name'] }}" class="media-thumb" loading="lazy">
+                                        @else
+                                            <span class="media-file-icon">FILE</span>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="3" style="text-align:center; color:#999;">No files uploaded yet.</td></tr>
+                            <tr><td colspan="4" style="text-align:center; color:#999;">No files uploaded yet.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -156,7 +171,7 @@
             previewContent.innerHTML = '';
         }
 
-        function showPreview(url, fileName) {
+        function showPreview(url, fileName, mimeType) {
             const modal = document.getElementById('previewModal');
             const modalMedia = document.getElementById('modalMedia');
             const fileInfo = document.getElementById('fileInfo');
@@ -164,10 +179,10 @@
             const fileExtension = fileName.split('.').pop().toLowerCase();
             const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
             
-            if (imageExtensions.includes(fileExtension)) {
+            if ((mimeType || '').startsWith('image/') || imageExtensions.includes(fileExtension)) {
                 modalMedia.innerHTML = `<img src="${url}" alt="${fileName}" />`;
-            } else if (['mp4', 'webm', 'ogg', 'mov'].includes(fileExtension)) {
-                modalMedia.innerHTML = `<video controls style="max-width:100%; max-height:70vh;"><source src="${url}" type="video/${fileExtension === 'mov' ? 'quicktime' : fileExtension}"></video>`;
+            } else if ((mimeType || '').startsWith('video/') || ['mp4', 'webm', 'ogg', 'mov'].includes(fileExtension)) {
+                modalMedia.innerHTML = `<video controls style="max-width:100%; max-height:70vh;"><source src="${url}" type="${mimeType || 'video/' + (fileExtension === 'mov' ? 'quicktime' : fileExtension)}"></video>`;
             } else {
                 modalMedia.innerHTML = `
                     <div style="text-align:center; padding:2rem;">
@@ -179,7 +194,7 @@
                 `;
             }
             
-            fileInfo.innerHTML = `<p><strong>File:</strong> ${fileName}</p>`;
+            fileInfo.innerHTML = `<p><strong>File:</strong> ${fileName}</p><p><strong>Type:</strong> ${mimeType || 'Unknown'}</p>`;
             modal.classList.add('active');
         }
 

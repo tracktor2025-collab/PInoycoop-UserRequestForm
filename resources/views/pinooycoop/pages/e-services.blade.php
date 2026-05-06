@@ -51,8 +51,16 @@
     }
 
     .feature-image {
-      background: url('images/blog/blog-1.jpg') center/cover no-repeat;
+      background: #d9d9e3;
       min-height: 280px;
+      overflow: hidden;
+    }
+
+    .feature-image img {
+      height: 100%;
+      min-height: 280px;
+      object-fit: cover;
+      width: 100%;
     }
 
     .feature-text {
@@ -178,21 +186,75 @@
       .services-grid {
         grid-template-columns: 1fr;
       }
+
+      .benefit-card {
+        min-height: auto;
+      }
     }
 
     @media (max-width: 575px) {
       .eservices-page {
-        padding-top: 82px;
+        padding-top: 74px;
       }
 
       .eservices-logo {
         flex-direction: column;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .eservices-logo img {
+        max-height: 56px;
+      }
+
+      .eservices-logo span {
+        font-size: 24px;
+      }
+
+      .feature-image {
+        min-height: 210px;
+      }
+
+      .feature-image img {
+        min-height: 210px;
+      }
+
+      .feature-text {
+        font-size: 14px;
+        line-height: 1.65;
+        text-align: left;
+      }
+
+      .section-band {
+        font-size: 25px;
+        padding: 11px 16px;
       }
 
       .feature-text,
       .benefit-card,
       .services-column {
-        padding: 24px;
+        padding: 20px;
+      }
+
+      .benefit-card h3,
+      .service-item h3 {
+        font-size: 18px;
+      }
+
+      .service-item {
+        grid-template-columns: 38px 1fr;
+        margin-bottom: 26px;
+      }
+
+      .number-badge {
+        flex-basis: 32px;
+        font-size: 18px;
+        height: 32px;
+        width: 32px;
+      }
+
+      .pipeline-note {
+        text-align: left;
       }
     }
   </style>
@@ -209,7 +271,9 @@
     </div>
 
     <div class="service-feature">
-      <div class="feature-image" aria-label="Online banking with card payment"></div>
+      <div class="feature-image">
+        <img src="images/services/eservices-online-banking.svg" alt="E-Services online banking and card payments">
+      </div>
       <div class="feature-text">
         <p>Pinoy Coop E-Services is a service that enables all members to do personal banking such as, but not limited to balance inquiry, withdrawal, bills payments, fund transfer, and more, by using their Pinoy Coop Kard anywhere on any channel (Pinoy Coop ATMs, other Bancnet affiliated ATMs, POS, Bancnet Online) and anytime most convenient to them thus enjoying better quality of life.</p>
       </div>

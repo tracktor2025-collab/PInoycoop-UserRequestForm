@@ -13,7 +13,7 @@
 
   <!-- ** Basic Page Needs ** -->
   <meta charset="utf-8">
-  <title>News - Startup Business Bootstrap Template</title>
+  <title>News &amp; Events - MASS-SPECC</title>
 
   <!-- ** Mobile Specific Metas ** -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -90,10 +90,42 @@
     .headline-panel,
     .feed-panel {
       padding: 1.25rem;
+      --news-feed-card-height: 168px;
     }
     .feature-panel,
     .event-panel {
       padding: 1.1rem;
+    }
+    .panel-heading-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: .85rem;
+    }
+    .panel-heading-row .segment-label {
+      margin-bottom: 0;
+    }
+    .panel-view-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: .45rem .75rem;
+      border-radius: 999px;
+      background: rgba(0, 167, 225, .1);
+      color: #0b80bb;
+      font-size: .74rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 4;
+      white-space: nowrap;
+    }
+    .panel-view-link:hover {
+      background: #0b80bb;
+      color: #fff;
     }
     .headline-carousel {
       border-radius: 20px;
@@ -221,6 +253,46 @@
       background: #dfeaf5;
       min-height: 116px;
     }
+    .feed-panel .mini-list {
+      grid-auto-rows: var(--news-feed-card-height);
+    }
+    .feed-panel .mini-article {
+      height: 100%;
+      min-height: 0;
+      grid-template-columns: 132px minmax(0, 1fr);
+      overflow: hidden;
+    }
+    .feed-panel .mini-article.is-brief {
+      grid-template-columns: 1fr;
+      height: 100%;
+      padding: .85rem;
+    }
+    .feed-panel .mini-article.is-brief.has-image {
+      grid-template-columns: 132px minmax(0, 1fr);
+    }
+    .feed-panel .mini-article > div:last-child {
+      min-width: 0;
+      overflow: hidden;
+    }
+    .feed-panel .mini-thumb-wrap {
+      min-height: 0;
+      height: 100%;
+    }
+    .feed-panel .mini-article h4,
+    .feed-panel .mini-article h5,
+    .feed-panel .mini-article p {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .feed-panel .mini-article h4,
+    .feed-panel .mini-article h5 {
+      -webkit-line-clamp: 2;
+    }
+    .feed-panel .mini-article p {
+      -webkit-line-clamp: 2;
+      line-height: 1.55;
+    }
     .meta-line {
       display: flex;
       flex-wrap: wrap;
@@ -300,6 +372,15 @@
       .mini-article {
         grid-template-columns: 1fr;
       }
+      .feed-panel {
+        --news-feed-card-height: 190px;
+      }
+      .feed-panel .mini-article {
+        grid-template-columns: 118px minmax(0, 1fr);
+      }
+      .feed-panel .mini-article.is-brief.has-image {
+        grid-template-columns: 118px minmax(0, 1fr);
+      }
       .headline-slide {
         height: 320px;
       }
@@ -353,7 +434,7 @@
         <div>
           <div class="news-page-kicker">Newsroom</div>
           <h1 class="news-page-title">News & Events</h1>
-          <p class="news-page-copy">Latest published updates from MASS-SPECC, arranged into lead headlines, feature stories, standard news, briefs, and events.</p>
+          <p class="news-page-copy">Latest published updates from MASS-SPECC</p>
         </div>
       </div>
 
@@ -361,7 +442,10 @@
         <div class="stack-grid">
           @if ($headlineItems->isNotEmpty())
             <section class="headline-panel">
-              <div class="segment-label">Headlines</div>
+              <div class="panel-heading-row">
+                <div class="segment-label">Headlines</div>
+                <a href="{{ route('pinooycoop.events.category', ['category' => 'headlines']) }}" class="panel-view-link">View all</a>
+              </div>
               <div id="headlineCarousel" class="carousel slide headline-carousel" data-ride="carousel">
                 <ol class="carousel-indicators">
                   @foreach ($headlineItems as $index => $item)
@@ -381,7 +465,7 @@
                             <span><i class="far fa-calendar"></i> {{ optional($item->published_at)->format('M d, Y') ?? optional($item->updated_at)->format('M d, Y') }}</span>
                           </div>
                           <h2>{{ $item->title }}</h2>
-                          <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->content ?? ''), 260) }}</p>
+                          <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->subcontext ?: $item->content ?? ''), 260) }}</p>
                           <a href="{{ route('cms.page', ['slug' => $item->slug]) }}" class="headline-link">Read more</a>
                         </div>
                       </article>
@@ -394,7 +478,10 @@
 
             @if ($featureStories->isNotEmpty())
               <section class="feature-panel">
-                <div class="segment-label">Featured News</div>
+                <div class="panel-heading-row">
+                  <div class="segment-label">Featured News</div>
+                  <a href="{{ route('pinooycoop.events.category', ['category' => 'featured-news']) }}" class="panel-view-link">View all</a>
+                </div>
                 <div class="mini-list">
                   @foreach ($featureStories as $item)
                     <article class="mini-article">
@@ -410,7 +497,7 @@
                           <span><i class="far fa-calendar"></i> {{ optional($item->published_at)->format('M d, Y') ?? optional($item->updated_at)->format('M d, Y') }}</span>
                         </div>
                         <h4>{{ $item->title }}</h4>
-                        <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->content ?? ''), 135) }}</p>
+                        <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->subcontext ?: $item->content ?? ''), 135) }}</p>
                       </div>
                     </article>
                   @endforeach
@@ -421,12 +508,15 @@
 
         <aside class="news-sidebar">
           <section class="feed-panel">
-            <div class="segment-label">Standard News & Short Brief</div>
+            <div class="panel-heading-row">
+              <div class="segment-label">Standard News & Short Brief</div>
+              <a href="{{ route('pinooycoop.events.category', ['category' => 'standard-news-short-brief']) }}" class="panel-view-link">View all</a>
+            </div>
             <div class="mini-list">
               @foreach ($feedItems as $item)
-                <article class="mini-article {{ $item->template === 'short_brief' ? 'is-brief' : '' }}">
+                <article class="mini-article {{ $item->template === 'short_brief' ? 'is-brief' : '' }} {{ $item->template === 'short_brief' && $item->image_data_uri ? 'has-image' : '' }}">
                   <a href="{{ route('cms.page', ['slug' => $item->slug]) }}" class="stretched-link-anchor" aria-label="{{ $item->title }}"></a>
-                  @if ($item->template !== 'short_brief')
+                  @if ($item->template !== 'short_brief' || $item->image_data_uri)
                     <div class="mini-thumb-wrap">
                       @if ($item->image_data_uri)
                         <img src="{{ $item->image_data_uri }}" alt="{{ $item->title }}" class="mini-thumb">
@@ -440,10 +530,10 @@
                     </div>
                     @if ($item->template === 'short_brief')
                       <h5>{{ $item->title }}</h5>
-                      <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->content ?? ''), 90) }}</p>
+                      <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->subcontext ?: $item->content ?? ''), 90) }}</p>
                     @else
                       <h4>{{ $item->title }}</h4>
-                      <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->content ?? ''), 110) }}</p>
+                      <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->subcontext ?: $item->content ?? ''), 110) }}</p>
                     @endif
                   </div>
                 </article>
@@ -469,7 +559,7 @@
                           <span><i class="far fa-calendar"></i> {{ optional($item->published_at)->format('M d, Y') ?? optional($item->updated_at)->format('M d, Y') }}</span>
                         </div>
                         <h4>{{ $item->title }}</h4>
-                        <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->content ?? ''), 120) }}</p>
+                        <p>{{ \Illuminate\Support\Str::limit(strip_tags($item->subcontext ?: $item->content ?? ''), 120) }}</p>
                         <div class="event-actions">
                           <a href="{{ route('cms.page', ['slug' => $item->slug]) }}" class="btn btn-trans-black">Read more</a>
                           <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($item->title) }}" class="btn btn-map" target="_blank" rel="noopener noreferrer">Map</a>
@@ -486,62 +576,7 @@
   </div>
 </section>
 
-<!--  FOOTER AREA START  -->
-<section id="footer" class="section-padding">
-  <div class="container">
-    <div class="row justify-content-around">
-      <div class="col-lg-4">
-        <div class="footer-widget footer-link">
-          <h4>We concern about you<br> to grow business rapidly.</h4>
-          <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolore ipsam hic non sunt recusandae atque unde saepe nihil earum voluptatibus aliquid optio suscipit nobis quia vel quod, iure quae.</p>
-        </div>
-      </div>
-      <div class="col-lg-2 col-md-4 col-6">
-        <div class="footer-widget footer-link">
-          <h4>About</h4>
-          <ul>
-            <li><a href="about.html">About</a></li>
-            <li><a href="service.html">Service</a></li>
-            <li><a href="pricing.html">Pricing</a></li>
-            <li><a href="#!">Team</a></li>
-            <li><a href="#!">Testimonials</a></li>
-            <li><a href="blog.html">Blog</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-lg-2 col-md-4 col-6">
-        <div class="footer-widget footer-link">
-          <h4>Quick Links</h4>
-          <ul>
-            <li><a href="#!">How it Works</a></li>
-            <li><a href="#!">Support</a></li>
-            <li><a href="#!">Privacy Policy</a></li>
-            <li><a href="#!">Report Bug</a></li>
-            <li><a href="#!">License</a></li>
-            <li><a href="#!">Terms & Condition</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-4 col-sm-12">
-        <div class="footer-widget footer-text">
-          <h4>Our location</h4>
-          <p class="mail"><span>Mail:</span> promdise@gmail.com</p>
-          <p><span>Phone :</span>+202-277-3894</p>
-          <p><span>Location:</span> 455 West Orchard Street Kings Mountain, NC 28086,NOC building</p>
-        </div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-lg-12 text-center">
-        <div class="footer-copy">
-          Copyright &copy; 2021, Designed &amp; Developed by <a href="https://themefisher.com/">Themefisher</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-<!--  FOOTER AREA END  -->
+@include('pinooycoop.partials.footer')
    
 
     <!-- 

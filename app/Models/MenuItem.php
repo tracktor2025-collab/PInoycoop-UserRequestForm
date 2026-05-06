@@ -48,4 +48,25 @@ class MenuItem extends Model
     {
         return $this->hasMany(MenuItem::class, 'parent_id')->orderBy('sort_order');
     }
+
+    public function activeChildren(): HasMany
+    {
+        return $this->hasMany(MenuItem::class, 'parent_id')
+            ->where('is_active', true)
+            ->orderBy('sort_order');
+    }
+
+    public function getResolvedUrlAttribute(): string
+    {
+        if ($this->page) {
+            return route('cms.page', $this->page->slug);
+        }
+
+        return $this->url ?: '#';
+    }
+
+    public function getTargetAttribute($value): string
+    {
+        return $value ?: '_self';
+    }
 }

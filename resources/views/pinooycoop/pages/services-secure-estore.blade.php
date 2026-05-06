@@ -18,7 +18,7 @@
   <style>
     .solutions-page {
       background: #f8f6e9;
-      color: #12153f;
+      color: #1f3d7c;
       padding-top: 94px;
     }
 
@@ -60,10 +60,6 @@
       overflow: hidden;
     }
 
-    .feature-image.estore {
-      background: url('images/blog/blog-lg.jpg') center/cover no-repeat;
-    }
-
     .feature-image img {
       height: 100%;
       min-height: 250px;
@@ -72,7 +68,7 @@
     }
 
     .feature-text {
-      background: #080b58;
+      background: #1f3d7c;
       color: #fff;
       display: flex;
       flex-direction: column;
@@ -92,7 +88,7 @@
     }
 
     .benefits-title {
-      background: #07083b;
+      background: #1f3d7c;
       color: #fff;
       font-size: 32px;
       font-weight: 800;
@@ -121,7 +117,7 @@
     .wide-benefit h3,
     .benefit-card h3 {
       align-items: center;
-      color: #12153f;
+      color: #1f3d7c;
       display: flex;
       font-size: 21px;
       gap: 14px;
@@ -131,7 +127,7 @@
 
     .benefit-number {
       align-items: center;
-      background: #07083b;
+      background: #1f3d7c;
       border-radius: 50%;
       color: #fff;
       display: inline-flex;
@@ -144,7 +140,7 @@
 
     .wide-benefit ul,
     .benefit-card ul {
-      color: #11143d;
+      color: #1f3d7c;
       padding-left: 18px;
     }
 
@@ -171,21 +167,56 @@
       .benefits-grid {
         grid-template-columns: 1fr;
       }
+
+      .benefit-card {
+        min-height: auto;
+      }
     }
 
     @media (max-width: 575px) {
       .solutions-page {
-        padding-top: 82px;
+        padding-top: 74px;
       }
 
       .solution-logo {
         flex-direction: column;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .solution-logo img {
+        max-height: 56px;
+      }
+
+      .solution-logo span {
+        font-size: 24px;
+      }
+
+      .feature-image,
+      .feature-image img {
+        min-height: 210px;
+      }
+
+      .feature-text {
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .benefits-title {
+        font-size: 25px;
+        padding: 11px 16px;
       }
 
       .feature-text,
       .wide-benefit,
       .benefit-card {
-        padding: 24px;
+        padding: 20px;
+      }
+
+      .wide-benefit h3,
+      .benefit-card h3 {
+        align-items: flex-start;
+        font-size: 18px;
       }
     }
   </style>
@@ -243,7 +274,9 @@
     </div>
 
     <div class="solution-feature">
-      <div class="feature-image estore" aria-label="E-commerce hardware store"></div>
+      <div class="feature-image estore">
+        <img src="images/services/hardware-estore.svg" alt="Hardware products for sale">
+      </div>
       <div class="feature-text">
         <p>A provider of hardware items such as but not limited to personal computers, servers, switches and routers, external storage, UPS, structured cabling and other hardware peripherals that responds to the requirements of technology for best organization performance.</p>
       </div>

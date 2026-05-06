@@ -23,6 +23,11 @@ class Page extends Model
     protected $fillable = [
         'title',
         'slug',
+        'subcontext',
+        'seo_title',
+        'seo_description',
+        'seo_keywords',
+        'builder_settings',
         'content',
         'image_blob',
         'image_mime',
@@ -38,6 +43,7 @@ class Page extends Model
         return [
             'is_published' => 'boolean',
             'published_at' => 'datetime',
+            'builder_settings' => 'array',
         ];
     }
 
@@ -58,6 +64,11 @@ class Page extends Model
     public function menuItems(): HasMany
     {
         return $this->hasMany(MenuItem::class);
+    }
+
+    public function subImages(): HasMany
+    {
+        return $this->hasMany(PageSubImage::class)->orderBy('sort_order')->orderBy('id');
     }
 
     public function creator(): BelongsTo

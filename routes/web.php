@@ -6,43 +6,37 @@ use App\Http\Controllers\AdminPasswordResetController;
 use App\Http\Controllers\AdminSystemController;
 use App\Http\Controllers\AdminTwoFactorController;
 use App\Http\Controllers\PinoycoopAdmin\CmsPageController as PinoycoopCmsPageController;
+use App\Http\Controllers\PinoycoopAdmin\ContactMessageController as PinoycoopContactMessageController;
 use App\Http\Controllers\PinoycoopAdmin\DashboardController as PinoycoopDashboardController;
 use App\Http\Controllers\PinoycoopAdmin\MediaController as PinoycoopMediaController;
 use App\Http\Controllers\PinoycoopAdmin\MenuController as PinoycoopMenuController;
 use App\Http\Controllers\PinoycoopAdmin\MenuItemController as PinoycoopMenuItemController;
+use App\Http\Controllers\PinoycoopAdmin\PageBuilderController as PinoycoopPageBuilderController;
 use App\Http\Controllers\PinoycoopAdmin\SettingController as PinoycoopSettingController;
 use App\Http\Controllers\PinoycoopAdmin\UserManagementController as PinoycoopUserManagementController;
+use App\Http\Controllers\PinoycoopPageController;
 use App\Http\Controllers\UserAccessRequestController;
 use App\Models\Page;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [UserAccessRequestController::class, 'landing'])->name('landing');
-Route::view('/about', 'pinooycoop.pages.about')->name('pinooycoop.about');
-Route::view('/service', 'pinooycoop.pages.service')->name('pinooycoop.service');
+Route::get('/', [PinoycoopPageController::class, 'home'])->name('landing');
+Route::get('/about', [PinoycoopPageController::class, 'about'])->name('pinooycoop.about');
+Route::get('/service', [PinoycoopPageController::class, 'service'])->name('pinooycoop.service');
+Route::get('/contact', [PinoycoopPageController::class, 'contact'])->name('pinooycoop.contact');
+Route::post('/contact', [PinoycoopPageController::class, 'storeContactMessage'])->name('pinooycoop.contact.store');
 Route::view('/services-core', 'pinooycoop.pages.services-core')->name('pinooycoop.services-core');
 Route::view('/services-secure-estore', 'pinooycoop.pages.services-secure-estore')->name('pinooycoop.services-secure-estore');
 Route::view('/e-services', 'pinooycoop.pages.e-services')->name('pinooycoop.e-services');
-Route::get('/events', function () {
-    return view('pinooycoop.pages.events', [
-        'items' => Page::query()
-            ->where('is_published', true)
-            ->whereIn('template', ['headline', 'feature_story', 'standard_news', 'short_brief', 'event', 'news'])
-            ->orderByDesc('published_at')
-            ->orderByDesc('updated_at')
-            ->limit(30)
-            ->get(['id', 'title', 'slug', 'template', 'published_at', 'updated_at', 'content', 'image_blob', 'image_mime']),
-    ]);
-})->name('pinooycoop.events');
-Route::get('/p/{slug}', function (string $slug) {
-    $page = Page::query()
-        ->where('slug', $slug)
-        ->where('is_published', true)
-        ->firstOrFail();
-
-    return view('pinooycoop.pages.cms-page', [
-        'page' => $page,
-    ]);
-})->name('cms.page');
+Route::get('/events', [PinoycoopPageController::class, 'events'])->name('pinooycoop.events');
+Route::get('/events/category/{category}', [PinoycoopPageController::class, 'eventCategory'])->name('pinooycoop.events.category');
+Route::get('/p/{slug}', [PinoycoopPageController::class, 'cmsPage'])->name('cms.page');
+Route::get('/blog', [PinoycoopPageController::class, 'blog'])->name('pinooycoop.blog');
+Route::get('/blog-single', [PinoycoopPageController::class, 'blogSingle'])->name('pinooycoop.blog.single');
+Route::get('/index-2', [PinoycoopPageController::class, 'homeTwo'])->name('pinooycoop.home.two');
+Route::get('/index-3', [PinoycoopPageController::class, 'homeThree'])->name('pinooycoop.home.three');
+Route::get('/pinoycoop-media/{path}', [PinoycoopMediaController::class, 'show'])
+    ->where('path', '.*')
+    ->name('pinoycoop.media.show');
 Route::get('/request-captcha', [UserAccessRequestController::class, 'captchaPage'])->name('request.captcha');
 Route::post('/verify-captcha', [UserAccessRequestController::class, 'verifyCaptcha'])
     ->middleware('throttle:captcha-verify')
@@ -63,11 +57,19 @@ Route::prefix('admin')->name('pinoycoop.admin.')->group(function (): void {
     Route::put('/pages/{page}', [PinoycoopCmsPageController::class, 'update'])->name('pages.update');
     Route::delete('/pages/{page}', [PinoycoopCmsPageController::class, 'destroy'])->name('pages.destroy');
 
+    Route::get('/page-builder', [PinoycoopPageBuilderController::class, 'index'])->name('page-builder.index');
+    Route::get('/page-builder/create', [PinoycoopPageBuilderController::class, 'create'])->name('page-builder.create');
+    Route::post('/page-builder', [PinoycoopPageBuilderController::class, 'store'])->name('page-builder.store');
+    Route::get('/page-builder/{page}/edit', [PinoycoopPageBuilderController::class, 'edit'])->name('page-builder.edit');
+    Route::put('/page-builder/{page}', [PinoycoopPageBuilderController::class, 'update'])->name('page-builder.update');
+
     Route::get('/menus', [PinoycoopMenuController::class, 'index'])->name('menus.index');
     Route::get('/menus/create', [PinoycoopMenuController::class, 'create'])->name('menus.create');
     Route::post('/menus', [PinoycoopMenuController::class, 'store'])->name('menus.store');
     Route::get('/menus/{menu}/edit', [PinoycoopMenuController::class, 'edit'])->name('menus.edit');
     Route::put('/menus/{menu}', [PinoycoopMenuController::class, 'update'])->name('menus.update');
+    Route::patch('/menus/{menu}/toggle', [PinoycoopMenuController::class, 'toggle'])->name('menus.toggle');
+    Route::post('/menus/{menu}/duplicate', [PinoycoopMenuController::class, 'duplicate'])->name('menus.duplicate');
     Route::delete('/menus/{menu}', [PinoycoopMenuController::class, 'destroy'])->name('menus.destroy');
 
     Route::post('/menus/{menu}/items', [PinoycoopMenuItemController::class, 'store'])->name('menus.items.store');
@@ -76,9 +78,16 @@ Route::prefix('admin')->name('pinoycoop.admin.')->group(function (): void {
 
     Route::get('/media', [PinoycoopMediaController::class, 'index'])->name('media.index');
     Route::post('/media', [PinoycoopMediaController::class, 'store'])->name('media.store');
+    Route::delete('/media', [PinoycoopMediaController::class, 'destroy'])->name('media.destroy');
+
+    Route::get('/messages', [PinoycoopContactMessageController::class, 'index'])->name('messages.index');
+    Route::patch('/messages/{message}/read', [PinoycoopContactMessageController::class, 'markRead'])->name('messages.read');
+    Route::delete('/messages/{message}', [PinoycoopContactMessageController::class, 'destroy'])->name('messages.destroy');
 
     Route::get('/settings/general', [PinoycoopSettingController::class, 'edit'])->name('settings.general');
     Route::put('/settings/general', [PinoycoopSettingController::class, 'update'])->name('settings.general.update');
+    Route::get('/settings/home-counter', [PinoycoopSettingController::class, 'editHomeCounter'])->name('settings.home-counter');
+    Route::put('/settings/home-counter', [PinoycoopSettingController::class, 'updateHomeCounter'])->name('settings.home-counter.update');
 
     Route::get('/users', [PinoycoopUserManagementController::class, 'index'])->name('users.index');
 });

@@ -79,8 +79,16 @@
     }
 
     .core-overview-image {
-      background: url('images/about/h-1.jpg') center/cover no-repeat;
+      background: #d9d9e3;
       min-height: 280px;
+      overflow: hidden;
+    }
+
+    .core-overview-image img {
+      height: 100%;
+      min-height: 280px;
+      object-fit: contain;
+      width: 100%;
     }
 
     .core-overview-text {
@@ -153,28 +161,67 @@
     }
 
     @media (max-width: 991px) {
+      .core-hero {
+        margin-bottom: 42px;
+        padding: 44px 22px 38px;
+      }
+
       .core-overview,
       .benefits-grid {
         grid-template-columns: 1fr;
+      }
+
+      .benefit-card {
+        min-height: auto;
       }
     }
 
     @media (max-width: 575px) {
       .core-page {
-        padding-top: 80px;
+        padding-top: 74px;
       }
 
       .core-hero h1 {
-        font-size: 26px;
+        font-size: 24px;
+        line-height: 1.25;
       }
 
       .core-logo {
         flex-direction: column;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .core-logo img {
+        max-height: 56px;
+      }
+
+      .core-logo span {
+        font-size: 24px;
+      }
+
+      .core-overview-image {
+        min-height: 210px;
+      }
+
+      .core-overview-image img {
+        min-height: 210px;
+      }
+
+      .benefits-title {
+        font-size: 25px;
+        padding: 11px 16px;
       }
 
       .core-overview-text,
       .benefit-card {
-        padding: 24px;
+        font-size: 14px;
+        padding: 20px;
+        text-align: left;
+      }
+
+      .benefit-card h3 {
+        font-size: 18px;
       }
     }
   </style>
@@ -199,7 +246,9 @@
     </div>
 
     <div class="core-overview">
-      <div class="core-overview-image" aria-label="Digital banking and accounting system"></div>
+      <div class="core-overview-image">
+        <img src="images/services/core-accounting-system.svg" alt="Core accounting and banking system">
+      </div>
       <div class="core-overview-text">
         An automated accounting system that evolved gradually from DOS-based <strong>(PINOY COOP CORE 1.0)</strong> to WINDOWS-based <strong>(PINOY COOP CORE 2.0)</strong> and now to WEB-based <strong>(PINOY COOP CORE 3.0)</strong> version. It covers all common banking applications, modules, and supports end-to-end financial processes. It features value-added solutions such as the <strong>PINOY COOP BLAST</strong>, <strong>PINOY COOP REGISTER</strong> and <strong>PINOY COOP ELECT</strong>. PINOY COOP BLAST runs through Short Message Service (SMS) but independent to network that provides timely transactional alerts and new opportunities for engaging with the cooperative's members. PINOY COOP REGISTER enables members to register fast on cooperative's general forums and assemblies while PINOY COOP ELECT enables members to cast their votes electronically during elections in general assembly. Pinoy Coop Core is also <strong>CISA-compliant</strong>, which means that it has the capacity to submit basic credit data directly to the Credit Information Corporation (CIC).
       </div>

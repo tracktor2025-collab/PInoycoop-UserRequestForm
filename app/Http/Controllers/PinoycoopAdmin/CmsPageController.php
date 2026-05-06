@@ -33,7 +33,11 @@ class CmsPageController extends Controller
             'slug' => ['nullable', 'string', 'max:255', 'unique:pages,slug'],
             'content' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:20480'],
-            'media_path' => ['nullable', 'string'],
+            'media_path' => ['nullable', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($value && (! str_starts_with($value, 'cms-media/') || ! Storage::disk('public')->exists($value))) {
+                    $fail('Please select a valid image from the media library.');
+                }
+            }],
             'template' => ['nullable', 'string', 'max:255'],
             'is_published' => ['nullable', 'boolean'],
         ]);
@@ -63,7 +67,11 @@ class CmsPageController extends Controller
             'slug' => ['nullable', 'string', 'max:255', 'unique:pages,slug,' . $page->id],
             'content' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'max:20480'],
-            'media_path' => ['nullable', 'string'],
+            'media_path' => ['nullable', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($value && (! str_starts_with($value, 'cms-media/') || ! Storage::disk('public')->exists($value))) {
+                    $fail('Please select a valid image from the media library.');
+                }
+            }],
             'remove_image' => ['nullable', 'boolean'],
             'template' => ['nullable', 'string', 'max:255'],
             'is_published' => ['nullable', 'boolean'],
@@ -98,12 +106,14 @@ class CmsPageController extends Controller
 
     private function mediaFiles()
     {
+        Storage::disk('public')->makeDirectory('cms-media');
+
         return collect(Storage::disk('public')->allFiles('cms-media'))
             ->filter(fn (string $path) => str_starts_with(Storage::disk('public')->mimeType($path) ?? '', 'image/'))
             ->map(fn (string $path) => [
                 'path' => $path,
                 'name' => basename($path),
-                'url' => Storage::disk('public')->url($path),
+                'url' => route('pinoycoop.media.show', ['path' => $path]),
             ])
             ->values();
     }

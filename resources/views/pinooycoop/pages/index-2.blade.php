@@ -36,119 +36,6 @@
   <link rel="stylesheet" href="css/style.css">
   <!--Favicon-->
   <link rel="icon" href="images/favicon.png" type="image/x-icon">
-  <style>
-    .banner-3 #banner-carousel,
-    .banner-3 .carousel-inner,
-    .banner-3 .carousel-item,
-    .banner-3 .banner-slide {
-      height: 620px;
-    }
-
-    .banner-3 .banner-carousel-indicators {
-      bottom: 28px;
-    }
-
-    .banner-area .home-news-slide .content-padding {
-      padding: 155px 0 105px;
-    }
-
-    .home-news-slide .banner-content {
-      max-width: 850px;
-      margin: 0 auto;
-    }
-
-    .home-news-slide .subtitle {
-      letter-spacing: .12em;
-    }
-
-    .home-news-slide .banner-title {
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3;
-    }
-
-    .home-news-slide .home-news-subcontext {
-      max-width: 760px;
-      margin-left: auto;
-      margin-right: auto;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3;
-    }
-
-    .home-news-slide .home-news-date {
-      margin-top: -6px;
-      margin-bottom: 18px;
-      color: rgba(255, 255, 255, .86);
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-    }
-
-    .home-latest-card {
-      height: 100%;
-      background: #ffffff;
-    }
-
-    .home-latest-image {
-      display: block;
-      width: 100%;
-      height: 230px;
-      object-fit: cover;
-      background: linear-gradient(135deg, #173f67 0%, #0b80bb 100%);
-    }
-
-    .home-latest-card .blog-text {
-      display: flex;
-      flex-direction: column;
-      min-height: 245px;
-    }
-
-    .home-latest-card .h5 {
-      color: #16324f;
-      line-height: 1.35;
-    }
-
-    .home-latest-card .h5:hover {
-      color: #0b80bb;
-    }
-
-    .home-latest-card p {
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3;
-    }
-
-    .home-latest-read {
-      margin-top: auto;
-      color: #0b80bb;
-      font-weight: 700;
-    }
-
-    .home-latest-empty {
-      padding: 42px 24px;
-      background: #ffffff;
-      border: 1px solid rgba(22, 50, 79, .08);
-      text-align: center;
-    }
-
-    @media (max-width: 575.98px) {
-      .banner-3 #banner-carousel,
-      .banner-3 .carousel-inner,
-      .banner-3 .carousel-item,
-      .banner-3 .banner-slide {
-        height: 540px;
-      }
-
-      .banner-area .home-news-slide .content-padding {
-        padding: 130px 0 85px;
-      }
-    }
-  </style>
 
 </head><body data-spy="scroll" data-target="#mainNav">
 
@@ -156,76 +43,23 @@
 @include('pinooycoop.partials.nav')
 <!--MAIN HEADER AREA END -->
 
-<!--MAIN BANNER AREA START -->
-@php
-  $latestNews = ($latestNews ?? collect())->values();
-@endphp
-<div class="banner-area banner-3">
-  <div id="banner-carousel" class="carousel slide" data-ride="carousel">
-    <ol class="carousel-indicators banner-carousel-indicators">
-      @forelse ($latestNews as $index => $item)
-        <li data-target="#banner-carousel" data-slide-to="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}"></li>
-      @empty
-        <li data-target="#banner-carousel" data-slide-to="0" class="active"></li>
-      @endforelse
-    </ol>
+<!--MAIN BANNER AREA -->
+<div class="banner-area banner-2">
+  <div class="d-table">
+    <div class="d-table-cell">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 m-auto text-center col-sm-12 col-md-12">
+            <div class="banner-content content-padding">
+              <h5 class="subtitle">A creative agency</h5>
+              <h1 class="banner-title">We craft seo and digital markting services</h1>
+              <p>We provide marketing services to startups and small businesses to looking for a partner for their digital media, design-area.We are a a startup company to be commited to work and time management.</p>
 
-    <div class="carousel-inner">
-      @forelse ($latestNews as $index => $item)
-        @php
-          $slideImage = $item->image_data_uri ?: asset('pinooycoop/images/banner/banner-bg.jpg');
-          $slideCopy = \Illuminate\Support\Str::limit(strip_tags($item->subcontext ?: $item->content ?? ''), 220);
-          $slideDate = optional($item->published_at)->format('M d, Y') ?? optional($item->updated_at)->format('M d, Y');
-        @endphp
-        <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-          <div class="banner-slide home-news-slide" style="background-image: url('{{ $slideImage }}');">
-            <div class="overlay dark-overlay"></div>
-            <div class="d-table">
-              <div class="d-table-cell">
-                <div class="container">
-                  <div class="row">
-                    <div class="col-lg-9 m-auto text-center col-sm-12 col-md-12">
-                      <div class="banner-content content-padding">
-                        <h5 class="subtitle">{{ $item->template_label }}</h5>
-                        <h1 class="banner-title">{{ $item->title }}</h1>
-                        @if ($slideCopy)
-                          <p class="home-news-subcontext">{{ $slideCopy }}</p>
-                        @endif
-                        @if ($slideDate)
-                          <div class="home-news-date">Published {{ $slideDate }}</div>
-                        @endif
-                        <a href="{{ route('cms.page', ['slug' => $item->slug]) }}" class="btn btn-white btn-circled">Read more</a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <a href="contact.html" class="btn btn-white btn-circled">lets start</a>
             </div>
           </div>
         </div>
-      @empty
-        <div class="carousel-item active">
-          <div class="banner-slide home-news-slide" style="background-image: url('images/banner/banner-bg.jpg');">
-            <div class="overlay dark-overlay"></div>
-            <div class="d-table">
-              <div class="d-table-cell">
-                <div class="container">
-                  <div class="row">
-                    <div class="col-lg-9 m-auto text-center col-sm-12 col-md-12">
-                      <div class="banner-content content-padding">
-                        <h5 class="subtitle">Newsroom</h5>
-                        <h1 class="banner-title">Latest News & Events</h1>
-                        <p class="home-news-subcontext">Published MASS-SPECC articles will appear here when they are available.</p>
-                        <a href="{{ route('pinooycoop.events') }}" class="btn btn-white btn-circled">View news</a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      @endforelse
+      </div>
     </div>
   </div>
 </div>
@@ -236,14 +70,14 @@
     <div class="row">
       <div class="col-lg-12 col-sm-12 col-md-12">
         <div class="section-heading">
-          <p class="lead">Providing members with the resources they need to succeed through shared, high-quality support services.</p>
+          <p class="lead">We are creative digital marketing agency with expertise to grow any business that need proper guidance and a committed service.</p>
         </div>
       </div>
     </div>
     <div class="row mb-5">
       <div class="col-lg-5 d-none d-lg-block col-sm-12 align-self-end">
         <div class="intro-img">
-          <img src="images/banner/why-choose1.png" alt="intro-img" class="img-fluid">
+          <img src="images/banner/why-choose.png" alt="intro-img" class="img-fluid">
         </div>
       </div>
       <div class="col-lg-7 col-md-12 col-sm-12">
@@ -630,71 +464,101 @@
   </div>
 </section>
 <!--  PARTNER END  -->
-<!--  BLOG AREA START  -->
-<section id="blog" class="section-padding bg-main">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-12 col-sm-12 m-auto">
-        <div class="section-heading">
-          <h4 class="section-title">Latest News</h4>
-          <div class="line"></div>
-          <p>Recent published updates, stories, and events from MASS-SPECC.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-      @forelse ($latestNews->take(3) as $post)
-        @php
-          $postImage = $post->image_data_uri ?: asset('pinooycoop/images/banner/banner-bg.jpg');
-          $postDate = optional($post->published_at)->format('M d, Y') ?? optional($post->updated_at)->format('M d, Y');
-          $postExcerpt = \Illuminate\Support\Str::limit(strip_tags($post->subcontext ?: $post->content ?? ''), 145);
-        @endphp
-        <div class="col-lg-4 col-sm-6 col-md-4 mb-4">
-          <div class="blog-block home-latest-card">
-            <img src="{{ $postImage }}" alt="{{ $post->title }}" class="home-latest-image">
-            <div class="blog-text">
-              <h6 class="author-name"><span>{{ $post->template_label }}</span>{{ $postDate }}</h6>
-              <a href="{{ route('cms.page', ['slug' => $post->slug]) }}" class="h5 my-2 d-inline-block">
-                {{ $post->title }}
-              </a>
-              @if ($postExcerpt)
-                <p>{{ $postExcerpt }}</p>
-              @endif
-              <a href="{{ route('cms.page', ['slug' => $post->slug]) }}" class="home-latest-read">Read More</a>
-            </div>
-          </div>
-        </div>
-      @empty
-        <div class="col-lg-8 m-auto">
-          <div class="home-latest-empty">
-            <h5>No recent posts yet</h5>
-            <p class="mb-0">Published MASS-SPECC articles will appear here when they are available.</p>
-          </div>
-        </div>
-      @endforelse
-    </div>
-  </div>
-</section>
-<!--  BLOG AREA END  -->
 <!--  COUNTER AREA START  -->
 <section id="counter" class="section-padding">
   <div class="overlay dark-overlay"></div>
   <div class="container">
     <div class="row">
-      @foreach (($homeCounters ?? []) as $counterItem)
-        <div class="col-lg-3 col-sm-6 col-md-6">
-          <div class="counter-stat">
-            <i class="icofont {{ $counterItem['icon'] ?? 'icofont-heart' }}"></i>
-            <span class="counter" data-count="{{ (int) ($counterItem['value'] ?? 0) }}">0</span>
-            <h5>{{ $counterItem['label'] ?? '' }}</h5>
-          </div>
+      <div class="col-lg-3 col-sm-6 col-md-6">
+        <div class="counter-stat">
+          <i class="icofont icofont-heart"></i>
+          <span class="counter" data-count="460">0</span>
+          <h5>Our Happy Clients</h5>
         </div>
-      @endforeach
+      </div>
+      <div class="col-lg-3 col-sm-6 col-md-6">
+        <div class="counter-stat">
+          <i class="icofont icofont-rocket"></i>
+          <span class="counter" data-count="60">0</span>
+          <h5>Projects Done</h5>
+        </div>
+      </div>
+      <div class="col-lg-3 col-sm-6 col-md-6">
+        <div class="counter-stat">
+          <i class="icofont icofont-hand-power"></i>
+          <span class="counter" data-count="30">0</span>
+          <h5>Experienced stuff</h5>
+        </div>
+      </div>
+      <div class="col-lg-3 col-sm-6 col-md-6">
+        <div class="counter-stat">
+          <i class="icofont icofont-shield-alt"></i>
+          <span class="counter" data-count="25">0</span>
+          <h5>Ongoning Projects</h5>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 <!--  COUNTER AREA END  -->
+<!--  BLOG AREA START  -->
+<section id="blog" class="section-padding">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 col-sm-12 m-auto">
+        <div class="section-heading">
+          <h4 class="section-title">Latest Blog news</h4>
+          <div class="line"></div>
+          <p>Our blog journey may come handy to build a community to make more effective success for business. Latest
+            and trend tricks will help a lot </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-4 col-sm-6 col-md-4">
+        <div class="blog-block ">
+          <img src="images/blog/blog-1.jpg" alt="" class="img-fluid">
+          <div class="blog-text">
+            <h6 class="author-name"><span>Tips and tricks</span>john Doe</h6>
+            <a href="blog-single.html" class="h5 my-2 d-inline-block">
+              Best tips to grow your content quality and standard.
+            </a>
+            <p>If you want to grow your content quality and standard you should foolow these tips properly voluptatibus.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-sm-6 col-md-4">
+        <div class="blog-block ">
+          <img src="images/blog/blog-2.jpg" alt="" class="img-fluid">
+          <div class="blog-text">
+            <h6 class="author-name"><span>Branding</span>john Doe</h6>
+            <a href="blog-single.html" class="h5 my-2 d-inline-block">
+              Brand your site at top in few minuts.
+            </a>
+            <p>Brand your site at top, boost your audioance corporis facilis animi voluptas alias ex saepe quo
+              voluptatibus.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-sm-6 col-md-4">
+        <div class="blog-block ">
+          <img src="images/blog/blog-3.jpg" alt="" class="img-fluid">
+          <div class="blog-text">
+            <h6 class="author-name"><span>Marketing</span>john Doe</h6>
+            <a href="blog-single.html" class="h5 my-2 d-inline-block">
+              How to become a best sale <br>marketer in a year!
+            </a>
+            <p>Becomeing a best sale marketer is not easy but not impossible too.Need to follow up some proper guidance
+              and strategy .</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!--  BLOG AREA END  -->
 
 @include('pinooycoop.partials.footer')
 
