@@ -37,7 +37,7 @@
     }
 
     .eservices-logo span {
-      color: #171735;
+      color: #1f3d7c;
       font-size: 30px;
       font-weight: 800;
       letter-spacing: 1px;

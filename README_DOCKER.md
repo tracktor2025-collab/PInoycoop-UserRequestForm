@@ -1,6 +1,6 @@
 # Docker Setup (Laravel + MySQL)
 
-This project is already configured with a `Dockerfile` and `docker-compose.yml`.
+This project is configured with a `Dockerfile`, `docker-compose.yml`, and a Laravel startup entrypoint.
 
 ## Prerequisites
 
@@ -18,6 +18,17 @@ docker compose up -d --build
 Open the app:
 
 - `http://localhost:8000`
+
+The app container uses MySQL from the compose network:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=web_userrequest
+DB_USERNAME=laravel
+DB_PASSWORD=laravelpass
+```
 
 ## Database migrations
 
@@ -43,3 +54,14 @@ docker compose down
 docker compose down -v
 ```
 
+## Optional: run migrations automatically
+
+Set this in `docker-compose.yml` if you want migrations to run whenever the app container starts:
+
+```yaml
+RUN_MIGRATIONS: "true"
+```
+
+## Google service account
+
+`storage/app/google/*.json` is excluded from Docker image builds so secrets are not baked into the image. In local compose, the project folder is mounted into the container, so `storage/app/google/service-account.json` remains available from your working copy.

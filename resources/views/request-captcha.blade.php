@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>User Access Request Portal</title>
+    <link rel="icon" type="image/png" href="{{ asset('MASS-SPECC Logo/MASS-SPECC LOGO 2.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('MASS-SPECC Logo/MASS-SPECC LOGO 2.png') }}">
     <link rel="stylesheet" href="{{ asset('pinooycoop/plugins/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('pinooycoop/plugins/fontawesome/css/all.css') }}">
     <link rel="stylesheet" href="{{ asset('pinooycoop/plugins/icofont/icofont.css') }}">

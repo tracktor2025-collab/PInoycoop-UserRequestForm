@@ -26,6 +26,7 @@ Route::get('/contact', [PinoycoopPageController::class, 'contact'])->name('pinoo
 Route::post('/contact', [PinoycoopPageController::class, 'storeContactMessage'])->name('pinooycoop.contact.store');
 Route::view('/services-core', 'pinooycoop.pages.services-core')->name('pinooycoop.services-core');
 Route::view('/services-secure-estore', 'pinooycoop.pages.services-secure-estore')->name('pinooycoop.services-secure-estore');
+Route::view('/e-store', 'pinooycoop.pages.e-store')->name('pinooycoop.e-store');
 Route::view('/e-services', 'pinooycoop.pages.e-services')->name('pinooycoop.e-services');
 Route::get('/events', [PinoycoopPageController::class, 'events'])->name('pinooycoop.events');
 Route::get('/events/category/{category}', [PinoycoopPageController::class, 'eventCategory'])->name('pinooycoop.events.category');

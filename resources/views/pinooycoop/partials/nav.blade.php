@@ -23,8 +23,11 @@
                 <ul class="dropdown-menu" aria-labelledby="menuItem{{ $item->id }}">
                   @foreach ($item->activeChildren as $child)
                     <li>
-                      <a class="dropdown-item" href="{{ $child->resolved_url }}" target="{{ $child->target }}" @if($child->target === '_blank') rel="noopener" @endif>{{ $child->label }}</a>
+                      <a class="dropdown-item" href="{{ $child->resolved_url }}" target="{{ $child->target }}" @if($child->target === '_blank') rel="noopener" @endif>{{ $child->label === 'Services Secure & E-Store' ? 'Services Secure' : $child->label }}</a>
                     </li>
+                    @if ($child->label === 'Services Secure & E-Store')
+                      <li><a class="dropdown-item" href="{{ route('pinooycoop.e-store') }}">E-Store</a></li>
+                    @endif
                   @endforeach
                 </ul>
               </li>
@@ -48,7 +51,8 @@
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarWelcome">
               <li><a class="dropdown-item" href="{{ route('pinooycoop.services-core') }}">Services Core</a></li>
-              <li><a class="dropdown-item" href="{{ route('pinooycoop.services-secure-estore') }}">Services Secure &amp; E-Store</a></li>
+              <li><a class="dropdown-item" href="{{ route('pinooycoop.services-secure-estore') }}">Services Secure</a></li>
+              <li><a class="dropdown-item" href="{{ route('pinooycoop.e-store') }}">E-Store</a></li>
               <li><a class="dropdown-item" href="{{ route('pinooycoop.e-services') }}">E-Services</a></li>
             </ul>
           </li>
