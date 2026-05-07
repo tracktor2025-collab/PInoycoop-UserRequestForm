@@ -273,6 +273,24 @@ class AdminAccessRequestController extends Controller
         ]);
     }
 
+    public function loginFormCms(Request $request): View|RedirectResponse
+    {
+        $id = $request->session()->get('admin_id');
+        $admin = is_numeric($id) ? Admin::query()->find((int) $id) : null;
+        $portal = (string) $request->session()->get('login_portal', '');
+
+        if ($admin !== null && $admin->isCmsAdmin() && $portal === 'cms') {
+            return redirect()->route('pinoycoop.admin.dashboard');
+        }
+
+        return view('admin.login', [
+            'portal' => 'cms',
+            'formAction' => route('admin.cms.login'),
+            'title' => 'Pinoycoop CMS Admin Login',
+            'subtitle' => 'Sign in with your CMS admin email and password.',
+        ]);
+    }
+
     public function login(Request $request): RedirectResponse
     {
         return $this->authenticateByPortal($request, 'admin');
@@ -281,6 +299,11 @@ class AdminAccessRequestController extends Controller
     public function loginSuper(Request $request): RedirectResponse
     {
         return $this->authenticateByPortal($request, 'super');
+    }
+
+    public function loginCms(Request $request): RedirectResponse
+    {
+        return $this->authenticateByPortal($request, 'cms');
     }
 
     private function authenticateByPortal(Request $request, string $portal): RedirectResponse
@@ -301,6 +324,12 @@ class AdminAccessRequestController extends Controller
         }
         if ($portal === 'super' && ! $admin->isSuperAdmin()) {
             return back()->withInput()->with('error', 'This account is not a super admin.');
+        }
+        if ($portal === 'cms' && ! $admin->isCmsAdmin()) {
+            return back()->withInput()->with('error', 'This account is not a CMS admin.');
+        }
+        if ($portal === 'admin' && $admin->isCmsAdmin()) {
+            return back()->withInput()->with('error', 'This account is a CMS admin. Please use the Pinoycoop CMS login page.');
         }
 
         $request->session()->forget([
@@ -323,6 +352,7 @@ class AdminAccessRequestController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        $portal = (string) $request->session()->get('login_portal', '');
         $request->session()->forget([
             'admin_authenticated',
             'admin_id',
@@ -334,7 +364,13 @@ class AdminAccessRequestController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('admin.login.form');
+        $route = match ($portal) {
+            'super' => 'super.login.form',
+            'cms' => 'admin.cms.login.form',
+            default => 'admin.login.form',
+        };
+
+        return redirect()->route($route);
     }
 
     public function dashboard(Request $request): View

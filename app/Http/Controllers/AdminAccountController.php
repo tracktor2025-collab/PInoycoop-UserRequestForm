@@ -99,7 +99,7 @@ class AdminAccountController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:admins,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', Rule::in(['admin', 'super_admin'])],
+            'role' => ['required', 'string', Rule::in(['admin', 'super_admin', 'cms_admin'])],
             'position' => ['nullable', 'string', 'max:255'],
             'department' => ['nullable', 'string', 'max:255'],
             'contact_number' => ['nullable', 'string', 'max:50'],
@@ -126,7 +126,11 @@ class AdminAccountController extends Controller
             'account.admin_created',
             sprintf(
                 'Created %s account %s <%s>.',
-                $validated['role'] === 'super_admin' ? 'super admin' : 'admin',
+                match ($validated['role']) {
+                    'super_admin' => 'super admin',
+                    'cms_admin' => 'cms admin',
+                    default => 'admin',
+                },
                 $validated['name'],
                 $validated['email']
             ),

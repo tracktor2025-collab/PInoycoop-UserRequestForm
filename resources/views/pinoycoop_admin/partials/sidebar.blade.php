@@ -61,4 +61,15 @@
         </span>
         <span>Users</span>
     </a>
+
+    <div class="label">Session</div>
+    <form method="POST" action="{{ route('admin.logout') }}">
+        @csrf
+        <button type="submit" class="link link-button">
+            <span class="link-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></svg>
+            </span>
+            <span>Logout</span>
+        </button>
+    </form>
 </aside>

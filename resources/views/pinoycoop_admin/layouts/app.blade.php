@@ -19,6 +19,7 @@
         .link:hover, .link.active { background:rgba(255,255,255,.16); box-shadow:0 10px 24px rgba(0,0,0,.12); transform:translateY(-1px); }
         .link.active::before { content:""; position:absolute; left:-.9rem; top:.55rem; bottom:.55rem; width:4px; border-radius:0 999px 999px 0; background:var(--p); }
         .link:hover .link-icon, .link.active .link-icon { background:rgba(0,167,225,.32); }
+        .link-button { width:100%; border:none; background:transparent; text-align:left; font:inherit; }
         .content { padding:1.35rem; min-width:0; }
         .card { background:rgba(255,255,255,.96); border:1px solid var(--line); border-radius:8px; box-shadow:0 16px 40px rgba(32,48,79,.06); overflow:hidden; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
         .card:hover { border-color:rgba(0,167,225,.35); box-shadow:0 22px 60px rgba(32,48,79,.10); transform:translateY(-2px); }

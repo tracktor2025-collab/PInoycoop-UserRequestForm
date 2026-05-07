@@ -1,6 +1,6 @@
 @extends('admin.layout')
 
-@section('title', 'My Account')
+@section('title', 'Profile')
 
 @section('content')
     @push('styles')
@@ -45,7 +45,7 @@
     @endpush
 
     <div class="mb-3">
-        <h1 class="page-title">My Account</h1>
+        <h1 class="page-title">Profile</h1>
         <p class="page-subtitle">View your admin profile details and update your account settings.</p>
     </div>
 
@@ -62,7 +62,15 @@
             </div>
             <div class="info-item">
                 <div class="info-label">Role</div>
-                <p class="info-value">{{ isset($currentAdmin) && $currentAdmin->isSuperAdmin() ? 'Super Admin' : 'Admin' }}</p>
+                <p class="info-value">
+                    @if(isset($currentAdmin) && $currentAdmin->isSuperAdmin())
+                        Super Admin
+                    @elseif(isset($currentAdmin) && $currentAdmin->isCmsAdmin())
+                        CMS Admin
+                    @else
+                        Admin
+                    @endif
+                </p>
             </div>
             <div class="info-item">
                 <div class="info-label">Position</div>

@@ -54,6 +54,16 @@ class Admin extends Authenticatable implements CanResetPasswordContract
         return (string) $this->role === 'super_admin';
     }
 
+    public function isCmsAdmin(): bool
+    {
+        return (string) $this->role === 'cms_admin';
+    }
+
+    public function isStandardAdmin(): bool
+    {
+        return (string) $this->role === 'admin';
+    }
+
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
     {
         $this->notify(new AdminResetPassword($token));

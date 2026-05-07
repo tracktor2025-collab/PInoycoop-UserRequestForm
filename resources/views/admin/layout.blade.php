@@ -61,7 +61,7 @@
             opacity: 0.85;
         }
         .navbar-mainbg {
-            background-color: #5161ce;
+            background-color: #1f3d7c;
             padding: 0;
             border-radius: 0;
             box-shadow: none;
@@ -100,7 +100,7 @@
             position: relative;
         }
         #navbarSupportedContent > ul.navbar-nav > li.active > a.nav-link {
-            color: #5161ce;
+            color: #1f3d7c;
             background-color: transparent;
             transition: all 0.7s;
         }
@@ -162,7 +162,7 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background-color: #5161ce;
+            background-color: #1f3d7c;
         }
         .hori-selector .right:before {
             bottom: 0;
@@ -206,7 +206,7 @@
         }
         .dashboard-switch-btn:hover {
             background: #fff;
-            color: #5161ce;
+            color: #1f3d7c;
             border-color: #fff;
         }
         .logout-btn-nav:hover {
@@ -220,7 +220,7 @@
         .nav-shell {
             width: 100%;
             padding: 0;
-            background: #5161ce;
+            background: #1f3d7c;
             border-bottom: none;
         }
         .nav-inner {
@@ -257,7 +257,7 @@
             font-weight: 600;
         }
         .table-sort-link:hover {
-            color: #5161ce;
+            color: #1f3d7c;
             text-decoration: underline;
         }
         @media (max-width: 991px) {
@@ -317,7 +317,7 @@
                         <a class="nav-link" href="{{ route('admin.approvals') }}"><i class="bi bi-clipboard-check"></i>Approval Module</a>
                     </li>
                     <li class="nav-item {{ request()->routeIs('admin.account.my') ? 'active' : '' }}">
-                        <a class="nav-link" href="{{ route('admin.account.my') }}"><i class="bi bi-person-circle"></i>My Account</a>
+                        <a class="nav-link" href="{{ route('admin.account.my') }}"><i class="bi bi-person-circle"></i>Profile</a>
                     </li>
                 @endif
                 <li class="nav-item {{ request()->routeIs('admin.pdf.archive') ? 'active' : '' }}">
@@ -332,7 +332,10 @@
                             </a>
                         </li>
                     @endif
-                    <li class="nav-item {{ request()->routeIs('admin.account.*') ? 'active' : '' }}">
+                    <li class="nav-item {{ request()->routeIs('admin.account.my') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('admin.account.my') }}"><i class="bi bi-person-circle"></i>Profile</a>
+                    </li>
+                    <li class="nav-item {{ request()->routeIs('admin.account.admins') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('admin.account.admins') }}"><i class="bi bi-shield-lock"></i>Admin accounts</a>
                     </li>
                     <li class="nav-item dropdown {{ request()->routeIs('admin.system.*') ? 'active' : '' }}">

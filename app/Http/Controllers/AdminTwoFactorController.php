@@ -18,6 +18,9 @@ class AdminTwoFactorController extends Controller
         if ($portal === 'super' || $admin->isSuperAdmin()) {
             return 'super.dashboard';
         }
+        if ($portal === 'cms' || $admin->isCmsAdmin()) {
+            return 'pinoycoop.admin.dashboard';
+        }
 
         return 'admin.dashboard';
     }
@@ -148,7 +151,11 @@ class AdminTwoFactorController extends Controller
         AuditLogger::log(
             $request,
             'auth.login',
-            sprintf('Admin logged in (%s portal).', $portal === 'super' ? 'super' : 'standard'),
+            sprintf('Admin logged in (%s portal).', match ($portal) {
+                'super' => 'super',
+                'cms' => 'cms',
+                default => 'standard',
+            }),
             null,
             null,
             ['portal' => $portal, 'admin_email' => $admin->email],

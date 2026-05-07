@@ -11,9 +11,12 @@ class EnsurePendingAdminTwoFactor
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $loginRoute = (string) $request->session()->get('login_portal') === 'super'
-            ? 'super.login.form'
-            : 'admin.login.form';
+        $portal = (string) $request->session()->get('login_portal');
+        $loginRoute = match ($portal) {
+            'super' => 'super.login.form',
+            'cms' => 'admin.cms.login.form',
+            default => 'admin.login.form',
+        };
 
         $id = $request->session()->get('pending_2fa_admin_id');
         if (! is_numeric($id) || (int) $id < 1) {

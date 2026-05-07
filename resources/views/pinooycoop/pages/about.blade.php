@@ -1,160 +1,160 @@
 <!DOCTYPE html>
-
-<!--
- // WEBSITE: https://themefisher.com
- // TWITTER: https://twitter.com/themefisher
- // FACEBOOK: https://facebook.com/themefisher
- // GITHUB: https://github.com/themefisher/
--->
-
 <html lang="en">
 <head>
   <base href="{{ url('/pinooycoop') }}/">
 
-  <!-- ** Basic Page Needs ** -->
   <meta charset="utf-8">
-  <title>About Us - MASS-SPECC</title>
-
-  <!-- ** Mobile Specific Metas ** -->
+  <title>About Pinoycoop - MASS-SPECC</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="description" content="Business Bootstrap Template">
+  <meta name="description" content="About Pinoycoop, MASS-SPECC's cooperative technology platform and digital services ecosystem.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <meta name="author" content="Themefisher">
-  <meta name="generator" content="Themefisher Promodise Template v1.0">
-  
-  <!-- theme meta -->
+  <meta name="author" content="MASS-SPECC">
   <meta name="theme-name" content="promodise" />
-  
-  <!-- bootstrap.min css -->
+
   <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
-  <!-- fontawesome css -->
   <link rel="stylesheet" href="plugins/fontawesome/css/all.css">
-  <!-- Icofont -->
   <link rel="stylesheet" href="plugins/icofont/icofont.css">
-
-  <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
-  <!--Favicon-->
   <link rel="icon" href="images/favicon.png" type="image/x-icon">
+  <style>
+    .about-pinoycoop-card {
+      height: 100%;
+      background: #fff;
+      border: 1px solid rgba(31, 61, 124, 0.1);
+      border-radius: 8px;
+      padding: 28px 24px;
+      box-shadow: 0 10px 28px rgba(31, 61, 124, 0.06);
+    }
 
-</head><body data-spy="scroll" data-target="#mainNav">
+    .about-pinoycoop-card h4 {
+      color: #1f3d7c;
+    }
+
+    .about-pinoycoop-number {
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 700;
+      color: #00a7e1;
+      margin-bottom: 14px;
+    }
+
+    .about-logo-panel {
+      background: #f7fbff;
+      border: 1px solid rgba(31, 61, 124, 0.12);
+      border-radius: 10px;
+      padding: 30px;
+    }
+
+    .about-logo-panel img {
+      max-height: 110px;
+      object-fit: contain;
+    }
+
+    .about-hero-banner {
+      width: 100%;
+      min-height: 589px;
+      background: url('{{ asset("MASS-SPECC Logo/Pinoycoop Banner.png") }}') center center / cover no-repeat;
+    }
+
+    @media (max-width: 575.98px) {
+      .about-hero-banner {
+        min-height: 340px;
+        background-position: center top;
+      }
+    }
+  </style>
+</head>
+<body data-spy="scroll" data-target="#mainNav">
 
 @include('pinooycoop.partials.nav')
-<!--MAIN HEADER AREA END -->
-<!--MAIN BANNER AREA START -->
-<div class="page-banner-area page-contact" id="page-banner">
-  <div class="overlay dark-overlay"></div>
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-8 m-auto text-center col-sm-12 col-md-12">
-        <div class="banner-content content-padding">
-          <h1 class="text-white">Check our story</h1>
-          <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Unde, perferendis?</p>
-        </div>
-      </div>
-    </div>
-  </div>
+
+<div class="page-banner-area page-contact about-hero-banner" id="page-banner">
 </div>
-<!--MAIN HEADER AREA END -->
 
-
-<!--  ABout2  AREA START  -->
 <section class="section-padding">
   <div class="container">
     <div class="row align-items-center">
       <div class="col-lg-6 col-sm-12 col-md-8 mb-4">
-        <h3 class="mb-3">We’re Innovators & <br>SEO Marketing Agency</h3>
-        <p class="mb-4">We provide marketing services to startups and small businesses to looking for a partner for
-          their digital media, design-dev, lead generation</p>
+        <h3 class="mb-3">Technology made for cooperative operations</h3>
+        <p class="mb-4">Pinoycoop supports MASS-SPECC member cooperatives with practical digital tools for daily operations, member service, access management, reporting, and secure system use.</p>
 
-        <span class="h5 mb-4">Let's Check what we do actually :</span>
+        <span class="h5 mb-4 d-inline-block">What Pinoycoop helps cooperatives do:</span>
         <ul class="about-list2 my-4">
-          <li class="mb-2"><i class="far fa-check-circle"></i> Best Analytics Audits to your site in specific niche</li>
-
-          <li class="mb-2">
-            <i class="far fa-check-circle"> </i> Modern Keyword Analysis to keep up to date
-          </li>
-
-          <li class="mb-2">
-            <i class="far fa-check-circle"> </i> More quality content, social networking and relative sharing
-          </li>
-
-          <li class="mb-2">
-            <i class="far fa-check-circle"> </i> Social networking and relative sharing More quality content,
-          </li>
+          <li class="mb-2"><i class="far fa-check-circle"></i> Modernize cooperative banking and back-office workflows</li>
+          <li class="mb-2"><i class="far fa-check-circle"></i> Manage digital access requests for users and internal systems</li>
+          <li class="mb-2"><i class="far fa-check-circle"></i> Support member engagement through connected Pinoycoop services</li>
+          <li class="mb-2"><i class="far fa-check-circle"></i> Strengthen data readiness, security, and service continuity</li>
         </ul>
 
-        <a href="contact.html" class="mt-3 d-inline-block">Learn more about us <i class="fa fa-angle-right"></i></a>
+        <a href="{{ route('pinooycoop.services-core') }}" class="mt-3 d-inline-block">Explore Pinoycoop services <i class="fa fa-angle-right"></i></a>
       </div>
 
       <div class="col-lg-6 col-md-4">
-        <img src="images/about/about-4.jpg" alt="" class="img-fluid w-100">
+        <div class="about-logo-panel text-center">
+          <img src="{{ asset('MASS-SPECC Logo/Pinoy_Coop_Logo_21.png') }}" alt="Pinoycoop logo" class="img-fluid mb-4">
+          <p class="mb-0">A cooperative-first technology ecosystem for operations, access, member participation, and digital service delivery.</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
-<!--  ABOUT AREA END  -->
-<!--  HISTORY AREA  -->
+
 <section class="section-padding pt-0">
   <div class="container">
     <div class="row">
-      <div class="col-lg-6 ">
+      <div class="col-lg-6">
         <div class="media img-block mb-3 mb-lg-0">
-          <img src="images/about/h-1.jpg" alt="" class="img-fluid rounded mr-3">
-
-          <div class="media-body ">
-            <h4 class="mb-3">Provide services with maintain quality from 24 years!</h4>
-            <p>We provide marketing services to startups.Let's start your site in grow high.</p>
+          <img src="images/about/h-1.jpg" alt="Cooperative technology support" class="img-fluid rounded mr-3">
+          <div class="media-body">
+            <h4 class="mb-3">Built from cooperative needs</h4>
+            <p>Pinoycoop grew from the operational requirements of cooperatives that need reliable, practical, and locally relevant digital systems.</p>
           </div>
         </div>
       </div>
       <div class="col-lg-6">
         <div class="media img-block">
-          <img src="images/about/h-2.jpg" alt="" class="img-fluid rounded mr-3">
-
+          <img src="images/about/h-2.jpg" alt="MASS-SPECC cooperative support" class="img-fluid rounded mr-3">
           <div class="media-body">
-            <h4 class="mb-3">Our mission is to provide our client what they need!</h4>
-            <p>We provide small businesses looking for a partner for their digital media</p>
+            <h4 class="mb-3">Guided by MASS-SPECC support</h4>
+            <p>The platform is aligned with MASS-SPECC's work of helping cooperatives improve service delivery, governance, and technology adoption.</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 </section>
-<!--  HISTORY AREA END  -->
-<!--  COUNTER AREA  -->
+
 <section class="section-padding pt-0">
   <div class="container">
     <div class="row">
       <div class="col-lg-3 col-md-6">
         <div class="text-center border p-4 rounded mb-4">
-          <span class="counter text-dark font-weight-normal" data-count="460">0</span>
-          <h5 class="text-uppercase mt-2">Our Happy Clients</h5>
+          <span class="counter text-dark font-weight-normal" data-count="1">0</span>
+          <h5 class="text-uppercase mt-2">Cooperative focus</h5>
         </div>
       </div>
       <div class="col-lg-3 col-md-6">
         <div class="text-center border p-4 rounded mb-4">
-          <span class="counter text-dark font-weight-normal" data-count="60">0</span>
-          <h5 class="text-uppercase mt-2">Projects Done</h5>
+          <span class="counter text-dark font-weight-normal" data-count="3">0</span>
+          <h5 class="text-uppercase mt-2">Core evolution</h5>
         </div>
       </div>
       <div class="col-lg-3 col-md-6">
         <div class="text-center border p-4 rounded mb-4">
-          <span class="counter text-dark font-weight-normal" data-count="30">0</span>
-          <h5 class="text-uppercase mt-2">Experienced stuff</h5>
+          <span class="counter text-dark font-weight-normal" data-count="6">0</span>
+          <h5 class="text-uppercase mt-2">Access modules</h5>
         </div>
       </div>
       <div class="col-lg-3 col-md-6">
-        <div class="text-center border p-4 rounded ">
-          <span class="counter text-dark font-weight-normal" data-count="25">0</span>
-          <h5 class="text-uppercase mt-2">Ongoning Projects</h5>
+        <div class="text-center border p-4 rounded">
+          <span class="counter text-dark font-weight-normal" data-count="24">0</span>
+          <h5 class="text-uppercase mt-2">Support mindset</h5>
         </div>
       </div>
     </div>
   </div>
 </section>
-<!--  COUNTER AREA END -->
-<!--  SECTION Service-2START  -->
+
 <section class="section-padding" id="section-strategy">
   <div class="container">
     <div class="row">
@@ -163,29 +163,29 @@
           <div class="col-lg-6">
             <div class="mb-5">
               <span class="icon-3x text-default"><i class="icofont-layers"></i></span>
-              <h4 class="my-3">Be on the top of Google</h4>
-              <p>Capitalize on low hanging fruit to identify a ballpark value added activity to beta test. </p>
+              <h4 class="my-3">Core system support</h4>
+              <p>Pinoycoop Core helps cooperatives handle common financial and operational processes through a system designed for their environment.</p>
             </div>
           </div>
           <div class="col-lg-6">
             <div class="mb-5">
-              <span class="icon-3x text-default"><i class="icofont-ui-timer"></i></span>
-              <h4 class="my-3">Save your time</h4>
-              <p>Override the digital divide with additional clickthroughs from DevOps. Nanotechnology </p>
+              <span class="icon-3x text-default"><i class="icofont-users-alt-4"></i></span>
+              <h4 class="my-3">Member engagement</h4>
+              <p>Services such as BLAST, REGISTER, and ELECT help cooperatives reach members, organize participation, and support assembly activities.</p>
             </div>
           </div>
           <div class="col-lg-6">
             <div>
               <span class="icon-3x text-default"><i class="icofont-ui-browser"></i></span>
-              <h4 class="my-3">Cross-devices ability</h4>
-              <p>Capitalize on low hanging fruit to identify a ballpark value added activity to beta test. </p>
+              <h4 class="my-3">Secure access workflows</h4>
+              <p>Access request and approval flows help administrators document user access, system assignments, and authorization records.</p>
             </div>
           </div>
           <div class="col-lg-6">
             <div>
-              <span class="icon-3x text-default"><i class="icofont icofont-shield"></i></span>
-              <h4 class="my-3">Trusted by hundreds</h4>
-              <p>Override the digital divide with additional clickthroughs from DevOps. Nanotechnology </p>
+              <span class="icon-3x text-default"><i class="icofont-shield"></i></span>
+              <h4 class="my-3">Cooperative data readiness</h4>
+              <p>Pinoycoop services support better reporting discipline and data preparation for connected compliance and operational needs.</p>
             </div>
           </div>
         </div>
@@ -193,124 +193,48 @@
     </div>
   </div>
 </section>
-<!--  SECTION Service-2 END  -->
-<!--  SECTION TEAM  -->
+
 <section class="section-padding bg-gray">
   <div class="container">
     <div class="row">
       <div class="col-lg-8">
         <div>
-          <h3 class="mb-2">Our Expert Members do the magical</h3>
-          <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis, dignissimos?</p>
+          <h3 class="mb-2">A cooperative-first digital ecosystem</h3>
+          <p>Pinoycoop is not a generic software offering. It is shaped around cooperative realities: member records, access approvals, transaction alerts, reporting, assemblies, and the day-to-day need for dependable systems.</p>
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="col-lg-3 col-md-6 mt-5">
-        <img src="images/team/team-1.jpg" alt="" class="img-fluid rounded w-100">
-
-        <ul class="list-unstyled list-inline team-social mt-4">
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-facebook-f"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-twitter"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-pinterest"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-linkedin"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-google-plus"></i></a></li>
-        </ul>
-        <h4 class="mt-3">Michale John</h4>
-        <p class="mb-0">Senior Manager</p>
-
+    <div class="row mt-4">
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="about-pinoycoop-card">
+          <div class="about-pinoycoop-number">01</div>
+          <h4 class="mt-3">For cooperative operations</h4>
+          <p>Tools that help offices process work faster, reduce manual tracking, and keep access records organized.</p>
+        </div>
       </div>
-      <div class="col-lg-3 col-md-6 mt-5">
-        <img src="images/team/team-2.jpg" alt="" class="img-fluid rounded w-100">
-
-        <ul class="list-unstyled list-inline team-social mt-4">
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-facebook-f"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-twitter"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-pinterest"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-linkedin"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-google-plus"></i></a></li>
-        </ul>
-        <h4 class="mt-3">Michale John</h4>
-        <p class="mb-0">Marketing Manager</p>
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="about-pinoycoop-card">
+          <div class="about-pinoycoop-number">02</div>
+          <h4 class="mt-3">For members</h4>
+          <p>Services that support communication, registration, electronic participation, and better cooperative engagement.</p>
+        </div>
       </div>
-      <div class="col-lg-3 col-md-6 mt-5">
-        <img src="images/team/team-3.jpg" alt="" class="img-fluid rounded w-100">
-
-        <ul class="list-unstyled list-inline team-social mt-4">
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-facebook-f"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-twitter"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-pinterest"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-linkedin"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-google-plus"></i></a></li>
-        </ul>
-        <h4 class="mt-3">Michale John</h4>
-        <p class="mb-0">Marketing Manager</p>
-      </div>
-      <div class="col-lg-3 col-md-6 mt-5">
-        <img src="images/team/team-4.jpg" alt="" class="img-fluid rounded w-100">
-
-        <ul class="list-unstyled list-inline team-social mt-4">
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-facebook-f"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-twitter"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-pinterest"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-linkedin"></i></a></li>
-          <li class="list-inline-item"><a href="#!"><i class="fab fa-google-plus"></i></a></li>
-        </ul>
-        <h4 class="mt-3">Michale John</h4>
-        <p class="mb-0">Junior Developer</p>
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="about-pinoycoop-card">
+          <div class="about-pinoycoop-number">03</div>
+          <h4 class="mt-3">For governance</h4>
+          <p>Structured requests, authorization trails, and system access documentation help cooperatives manage accountability.</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
-<!--  SECTION TEAM END  -->
- <!--  PARTNER START  -->
- <section class="section-padding ">
-   <div class="container">
-     <div class="row">
-       <div class="col-lg-8 text-center text-lg-left">
-         <div class="mb-5">
-           <h3 class="mb-2">Trusted by hundred over years</h3>
-           <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis, dignissimos?</p>
-         </div>
-       </div>
-     </div>
-     <div class="row">
-       <div class="col-lg-3 col-sm-6 col-md-3 text-center">
-         <img src="images/clients/client01.png" alt="partner" class="img-fluid">
-       </div>
-       <div class="col-lg-3 col-sm-6 col-md-3 text-center">
-         <img src="images/clients/client06.png" alt="partner" class="img-fluid">
-       </div>
-       <div class="col-lg-3 col-sm-6 col-md-3 text-center">
-         <img src="images/clients/client04.png" alt="partner" class="img-fluid">
-       </div>
-       <div class="col-lg-3 col-sm-6 col-md-3 text-center">
-         <img src="images/clients/client05.png" alt="partner" class="img-fluid">
-       </div>
-     </div>
-   </div>
- </section>
- <!--  PARTNER END  -->
 
 @include('pinooycoop.partials.footer')
-   
 
-    <!-- 
-    Essential Scripts
-    =====================================-->
+<script src="plugins/jquery/jquery.min.js"></script>
+<script src="plugins/bootstrap/bootstrap.min.js"></script>
+<script src="js/script.js"></script>
 
-    
-    <!-- Main jQuery -->
-    <script src="plugins/jquery/jquery.min.js"></script>
-    <!-- Bootstrap css -->
-    <script src="plugins/bootstrap/bootstrap.min.js"></script>
-
-    <!-- Google Map -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCcABaamniA6OL5YvYSpB3pFMNrXwXnLwU"></script>
-    <script src="plugins/google-map/map.js"></script>
-
-    <!-- main script -->
-    <script src="js/script.js"></script>
-
-  </body>
-  </html>
+</body>
+</html>

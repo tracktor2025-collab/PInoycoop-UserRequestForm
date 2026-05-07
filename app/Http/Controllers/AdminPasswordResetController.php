@@ -12,10 +12,25 @@ class AdminPasswordResetController extends Controller
 {
     public function requestForm(): View
     {
-        return view('admin.forgot-password');
+        return $this->forgotPasswordView('admin');
+    }
+
+    public function requestFormCms(): View
+    {
+        return $this->forgotPasswordView('cms');
     }
 
     public function sendResetLink(Request $request): RedirectResponse
+    {
+        return $this->sendResetLinkForPortal($request, 'admin');
+    }
+
+    public function sendResetLinkCms(Request $request): RedirectResponse
+    {
+        return $this->sendResetLinkForPortal($request, 'cms');
+    }
+
+    private function sendResetLinkForPortal(Request $request, string $portal): RedirectResponse
     {
         $validated = $request->validate([
             'email' => ['required', 'string', 'email'],
@@ -24,7 +39,7 @@ class AdminPasswordResetController extends Controller
         $email = $validated['email'];
         $admin = Admin::query()->where('email', $email)->first();
 
-        if ($admin !== null && $admin->isSuperAdmin()) {
+        if (! $this->adminCanResetThroughPortal($admin, $portal)) {
             return back()
                 ->withInput($request->only('email'))
                 ->with('status', __('If an account exists for that email, you will receive a reset link shortly.'));
@@ -49,20 +64,51 @@ class AdminPasswordResetController extends Controller
 
     public function resetForm(Request $request, string $token): View|RedirectResponse
     {
+        return $this->resetFormForPortal($request, $token, 'admin');
+    }
+
+    public function resetFormCms(Request $request, string $token): View|RedirectResponse
+    {
+        return $this->resetFormForPortal($request, $token, 'cms');
+    }
+
+    private function resetFormForPortal(Request $request, string $token, string $portal): View|RedirectResponse
+    {
         $email = (string) $request->query('email', '');
+        $requestRoute = $portal === 'cms' ? 'admin.cms.password.request' : 'admin.password.request';
         if ($email === '') {
             return redirect()
-                ->route('admin.password.request')
+                ->route($requestRoute)
+                ->with('error', 'Invalid or expired reset link. Request a new link.');
+        }
+
+        $admin = Admin::query()->where('email', $email)->first();
+        if (! $this->adminCanResetThroughPortal($admin, $portal)) {
+            return redirect()
+                ->route($requestRoute)
                 ->with('error', 'Invalid or expired reset link. Request a new link.');
         }
 
         return view('admin.reset-password', [
             'token' => $token,
             'email' => $email,
+            'portal' => $portal,
+            'formAction' => route($portal === 'cms' ? 'admin.cms.password.update' : 'admin.password.update'),
+            'backRoute' => route($portal === 'cms' ? 'admin.cms.login.form' : 'admin.login.form'),
         ]);
     }
 
     public function reset(Request $request): RedirectResponse
+    {
+        return $this->resetForPortal($request, 'admin');
+    }
+
+    public function resetCms(Request $request): RedirectResponse
+    {
+        return $this->resetForPortal($request, 'cms');
+    }
+
+    private function resetForPortal(Request $request, string $portal): RedirectResponse
     {
         $validated = $request->validate([
             'token' => ['required', 'string'],
@@ -71,10 +117,10 @@ class AdminPasswordResetController extends Controller
         ]);
 
         $admin = Admin::query()->where('email', $validated['email'])->first();
-        if ($admin !== null && $admin->isSuperAdmin()) {
+        if (! $this->adminCanResetThroughPortal($admin, $portal)) {
             return redirect()
-                ->route('admin.login.form')
-                ->with('error', 'Password reset is not available for this account.');
+                ->route($portal === 'cms' ? 'admin.cms.password.request' : 'admin.password.request')
+                ->with('error', 'Invalid or expired reset link. Request a new link.');
         }
 
         $status = Password::broker('admins')->reset(
@@ -87,13 +133,37 @@ class AdminPasswordResetController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
+            $loginRoute = $admin !== null && $admin->isCmsAdmin()
+                ? 'admin.cms.login.form'
+                : 'admin.login.form';
+
             return redirect()
-                ->route('admin.login.form')
+                ->route($loginRoute)
                 ->with('success', 'Password updated. Sign in with your new password. Two-factor authentication is unchanged.');
         }
 
         return back()
             ->withInput($request->only('email'))
             ->withErrors(['email' => __($status)]);
+    }
+
+    private function forgotPasswordView(string $portal): View
+    {
+        return view('admin.forgot-password', [
+            'portal' => $portal,
+            'formAction' => route($portal === 'cms' ? 'admin.cms.password.email' : 'admin.password.email'),
+            'backRoute' => route($portal === 'cms' ? 'admin.cms.login.form' : 'admin.login.form'),
+        ]);
+    }
+
+    private function adminCanResetThroughPortal(?Admin $admin, string $portal): bool
+    {
+        if ($admin === null || $admin->isSuperAdmin()) {
+            return false;
+        }
+
+        return $portal === 'cms'
+            ? $admin->isCmsAdmin()
+            : $admin->isStandardAdmin();
     }
 }

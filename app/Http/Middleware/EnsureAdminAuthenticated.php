@@ -18,7 +18,11 @@ class EnsureAdminAuthenticated
         if ($admin === null) {
             $request->session()->forget(['admin_authenticated', 'admin_id']);
 
-            return redirect()->route('admin.login.form')
+            $loginRoute = $request->routeIs('pinoycoop.admin.*')
+                ? 'admin.cms.login.form'
+                : 'admin.login.form';
+
+            return redirect()->route($loginRoute)
                 ->with('error', 'Please login to access the admin dashboard.');
         }
 

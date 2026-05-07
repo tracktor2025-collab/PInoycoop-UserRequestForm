@@ -48,8 +48,21 @@ Route::post('/submit-request', [UserAccessRequestController::class, 'submit'])
 Route::get('/success', [UserAccessRequestController::class, 'success'])->name('success');
 Route::match(['get', 'post'], '/success/pdf', [UserAccessRequestController::class, 'successPdf'])->name('success.pdf');
 
-Route::prefix('admin')->name('pinoycoop.admin.')->group(function (): void {
-    Route::get('/', [PinoycoopDashboardController::class, 'index'])->name('dashboard');
+Route::get('/admin', [AdminAccessRequestController::class, 'loginFormCms'])->name('admin.cms.login.form');
+Route::post('/admin', [AdminAccessRequestController::class, 'loginCms'])
+    ->middleware('throttle:admin-login')
+    ->name('admin.cms.login');
+Route::get('/admin/forgot-password', [AdminPasswordResetController::class, 'requestFormCms'])->name('admin.cms.password.request');
+Route::post('/admin/forgot-password', [AdminPasswordResetController::class, 'sendResetLinkCms'])
+    ->middleware('throttle:admin-password-reset')
+    ->name('admin.cms.password.email');
+Route::get('/admin/reset-password/{token}', [AdminPasswordResetController::class, 'resetFormCms'])->name('admin.cms.password.reset');
+Route::post('/admin/reset-password', [AdminPasswordResetController::class, 'resetCms'])
+    ->middleware('throttle:admin-password-reset')
+    ->name('admin.cms.password.update');
+
+Route::prefix('admin')->name('pinoycoop.admin.')->middleware(['admin.auth', 'admin.cms'])->group(function (): void {
+    Route::get('/dashboard', [PinoycoopDashboardController::class, 'index'])->name('dashboard');
     Route::get('/pages', [PinoycoopCmsPageController::class, 'index'])->name('pages.index');
     Route::get('/pages/create', [PinoycoopCmsPageController::class, 'create'])->name('pages.create');
     Route::post('/pages', [PinoycoopCmsPageController::class, 'store'])->name('pages.store');
@@ -98,6 +111,8 @@ Route::prefix('request-captcha/admin')->group(function (): void {
     Route::post('/login', [AdminAccessRequestController::class, 'login'])
         ->middleware('throttle:admin-login')
         ->name('admin.login');
+    Route::get('/cms/login', fn () => redirect()->route('admin.cms.login.form'));
+    Route::post('/cms/login', fn () => redirect()->route('admin.cms.login.form'));
 
     Route::get('/forgot-password', [AdminPasswordResetController::class, 'requestForm'])->name('admin.password.request');
     Route::post('/forgot-password', [AdminPasswordResetController::class, 'sendResetLink'])
@@ -137,13 +152,15 @@ Route::prefix('request-captcha/admin')->group(function (): void {
             ->name('admin.request.destroy');
         Route::get('/requests/{accessRequest}/approval-signed', [AdminAccessRequestController::class, 'downloadApprovalSigned'])->name('admin.request.approval-signed');
 
+        Route::get('/my-account', fn () => redirect()->route('admin.account.my'));
+        Route::get('/profile', [AdminAccountController::class, 'myAccount'])->name('admin.account.my');
+        Route::post('/account/password', [AdminAccountController::class, 'updatePassword'])->name('admin.account.password.update');
+        Route::post('/account/email', [AdminAccountController::class, 'updateEmail'])
+            ->middleware('throttle:admin-action')
+            ->name('admin.account.email.update');
+
         Route::middleware('admin.standard')->group(function (): void {
             Route::get('/approvals', [AdminAccessRequestController::class, 'approvals'])->name('admin.approvals');
-            Route::get('/my-account', [AdminAccountController::class, 'myAccount'])->name('admin.account.my');
-            Route::post('/account/password', [AdminAccountController::class, 'updatePassword'])->name('admin.account.password.update');
-            Route::post('/account/email', [AdminAccountController::class, 'updateEmail'])
-                ->middleware('throttle:admin-action')
-                ->name('admin.account.email.update');
             Route::post('/approvals/{accessRequest}', [AdminAccessRequestController::class, 'updateApproval'])
                 ->middleware('throttle:admin-action')
                 ->name('admin.approvals.update');
